@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Преміум Dark Glass Store | Замовлення</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <style>
+        /* --- ГЛОБАЛЬНІ СТИЛІ (ТВІЙ ОРИГІНАЛ) --- */
+        html { scroll-behavior: smooth; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Основний темний фон з градієнтом */
+            background: linear-gradient(135deg, #222222 0%, #111111 100%);
+            min-height: 100vh;
+            color: #f3f4f6; /* Світлий текст */
+            padding-bottom: 5.5rem;
+            -webkit-overflow-scrolling: touch; 
+            overflow-y: scroll;
+        }
+
+        /* --- АДАПТАЦІЯ ДЛЯ ТЕЛЕГРАМ ТА КОНТЕЙНЕР --- */
+        #app-container {
+            padding-top: 5rem; 
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        
+        /* --- GLASS MORPHISM (Ефект Скла) --- */
+        .glass-card {
+            background-color: rgba(34, 34, 34, 0.85); /* Напівпрозорий темний фон */
+            backdrop-filter: blur(25px); /* Сильне розмиття */
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(194, 216, 196, 0.2); /* Тонка рамка акцентного кольору */
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6); /* Глибока тінь */
+            transition: all 0.7s cubic-bezier(0.23, 1, 0.32, 1) !important; 
+            will-change: transform, box-shadow;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-12px); /* Підняття картки при наведенні */
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 1.0); /* Ще більш глибока тінь */
+        }
+
+        /* --- DOCK НАВІГАЦІЯ (Нижня панель) --- */
+        .nav-dock {
+            background-color: rgba(34, 34, 34, 0.95); 
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            width: 100%;
+            max-width: 350px; /* Обмеження ширини для Dock-стилю */
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Елементи навігації (кнопки) */
+        .glass-nav-item {
+            color: #C2D8C4; /* Акцентний колір */
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1) !important;
+        }
+
+        /* Активна кнопка навігації */
+        .glass-nav-item.active {
+            background-color: #333333; 
+            color: #C2D8C4; 
+            box-shadow: 0 0 20px rgba(194, 216, 196, 0.7); 
+            transform: scale(1.15); /* Збільшення при активації */
+        }
+        
+        /* --- АНІМАЦІЇ --- */
+        @keyframes pulse-once {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.4); opacity: 0.7; } 
+        }
+        .animated-pulse-once {
+          animation: pulse-once 0.7s ease-in-out;
+        }
+
+        .checkout-button {
+            background-image: linear-gradient(to right, #9bb39d, #C2D8C4); /* Градієнт акцентного кольору */
+            color: #222222; /* Темний текст */
+            transition: all 0.7s cubic-bezier(0.23, 1, 0.32, 1) !important;
+        }
+
+        .checkout-button:hover {
+            box-shadow: 0 15px 40px rgba(194, 216, 196, 0.9);
+            transform: scale(1.08); 
+        }
+
+        .product-image {
+             transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1) !important;
+             will-change: transform;
+        }
+
+        main {
+            transition: opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        /* Стиль для модальних вікон */
+        .modal {
+             display: none;
+             position: fixed;
+             z-index: 1000;
+             left: 0;
+             top: 0;
+             width: 100%;
+             height: 100%;
+             overflow: auto;
+             background-color: rgba(0, 0, 0, 0.8);
+             justify-content: center;
+             align-items: center;
+        }
+        .modal-content {
+             margin: auto;
+             max-width: 90%;
+             width: 400px;
+             padding: 20px;
+             border-radius: 1.5rem;
+             animation: slideUp 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        @keyframes slideUp {
+             from { transform: translateY(5%); opacity: 0; }
+             to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Адаптивність для категорій */
+        .category-container {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 10px; 
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; 
+        }
+        .category-container::-webkit-scrollbar {
+            display: none; 
+        }
+    </style>
+    <script>
+        // Конфігурація Tailwind
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'tg-accent': '#C2D8C4', // М'який зелено-сірий акцент
+                        'tg-dark': '#222222', // Дуже темний текст/фон
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <div id="toast-container"></div>
+
+    <div id="app-container" class="container mx-auto max-w-5xl">
+        <header class="text-center py-6">
+            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-tg-accent to-gray-400">
+                Premium Glass Store
+            </h1>
+            <p class="text-gray-400 mt-1">Елегантність та швидкість Telegram Web App</p>
+        </header>
+
+        <main class="p-4 pt-0">
+             <div id="home-page" class="page active">
+                <div class="p-6 md:p-12 glass-card rounded-[2rem] text-center mb-8">
+                    <i data-lucide="gem" class="w-16 h-16 text-tg-accent mx-auto mb-4"></i>
+                    <h2 class="text-4xl font-extrabold mb-4 text-white">Вітаємо у Lux Market</h2>
+                    <p class="text-gray-300 mb-6 max-w-3xl mx-auto text-lg">
+                        Відкрийте для себе преміальні товари. Наш Dark Glass додаток ідеально адаптований для Telegram.
+                    </p>
+                    <button data-page="catalog" class="hero-cta mt-4 px-8 py-3 checkout-button text-tg-dark font-bold rounded-xl shadow-xl transform hover:scale-[1.05]">
+                        <i data-lucide="arrow-right-circle" class="w-5 h-5 inline mr-2 text-tg-dark"></i>
+                        Дивитися товари
+                    </button>
+                </div>
+                
+                <h3 class="text-2xl font-bold text-white mb-6">🔥 Топ пропозиції</h3>
+                <div id="featured-products" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <p class="text-gray-500">Завантаження...</p>
+                </div>
+             </div>
+
+             <div id="catalog-page" class="page hidden">
+                <h2 class="text-3xl font-bold text-white mb-6 text-center">Каталог Товарів</h2>
+
+                <div class="category-container mb-6 flex space-x-3 p-1 glass-card rounded-xl">
+                    </div>
+
+                <div id="products-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                    </div>
+             </div>
+
+             <div id="cart-page" class="page hidden">
+                <h2 class="text-3xl font-bold text-white mb-6 text-center">Ваш Кошик</h2>
+                
+                <div class="max-w-3xl mx-auto">
+                    <div id="cart-items" class="space-y-4"></div>
+
+                    <div id="empty-cart" class="glass-card rounded-3xl p-12 text-center mt-8 border-tg-accent/30 hidden">
+                        <i data-lucide="shopping-bag" class="w-16 h-16 text-gray-400 mx-auto mb-4"></i>
+                        <h2 class="text-2xl font-bold mb-3 text-white">Кошик порожній</h2>
+                        <button data-page="catalog" class="hero-cta px-8 py-3 checkout-button text-tg-dark font-bold rounded-xl transition duration-200 transform hover:scale-[1.05] mt-4">
+                           <i data-lucide="package" class="w-5 h-5 inline mr-2 text-tg-dark"></i>
+                           Почати шопінг
+                        </button>
+                    </div>
+
+                    <div id="cart-summary" class="glass-card rounded-2xl p-6 mt-8 border-tg-accent/30">
+                        <div class="flex justify-between items-center text-xl font-semibold mb-4 border-b border-gray-700/50 pb-3">
+                            <span class="text-gray-300">Всього товарів:</span>
+                            <span id="total-items" class="text-xl font-bold text-white">0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xl font-semibold mb-6">
+                            <span class="text-gray-300">Загальна сума:</span>
+                            <span id="total-price-display" class="text-4xl font-extrabold text-tg-accent">0 грн</span>
+                        </div>
+                        <button id="checkout-btn" disabled class="w-full py-4 checkout-button text-tg-dark font-bold rounded-xl text-lg transition duration-300 shadow-2xl">
+                            <i data-lucide="check-circle" class="w-5 h-5 inline mr-2 text-tg-dark"></i>
+                            Оформити замовлення
+                        </button>
+                    </div>
+                </div>
+             </div>
+        </main>
+    </div>
+
+    <nav class="fixed bottom-3 nav-dock h-16 rounded-3xl z-50 p-2 shadow-2xl">
+        <div class="flex justify-around items-center h-full">
+            <button data-page="home" class="nav-link glass-nav-item active flex flex-col items-center p-2 rounded-2xl text-xs font-medium w-20">
+                <i data-lucide="home" class="w-5 h-5 mb-1"></i>
+                <span class="hidden sm:inline">Головна</span>
+            </button>
+            <button data-page="catalog" class="nav-link glass-nav-item flex flex-col items-center p-2 rounded-2xl text-xs font-medium w-20">
+                <i data-lucide="layout-grid" class="w-5 h-5 mb-1"></i>
+                <span class="hidden sm:inline">Каталог</span>
+            </button>
+            <button data-page="cart" class="nav-link glass-nav-item flex flex-col items-center p-2 rounded-2xl text-xs font-medium w-20 relative">
+                <i data-lucide="shopping-cart" class="w-5 h-5 mb-1"></i>
+                <span class="hidden sm:inline">Кошик</span>
+                <span id="cart-count" class="absolute top-0 right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden shadow-lg">0</span>
+            </button>
+        </div>
+    </nav>
+
+    <div id="checkout-modal" class="modal">
+        <div class="modal-content glass-card p-6">
+            <h3 class="text-2xl font-bold text-white mb-4">Оформлення Замовлення</h3>
+            <form id="checkout-form">
+                <div class="mb-4">
+                    <label for="customer-name" class="block text-gray-400 mb-1">Ваше Ім'я *</label>
+                    <input type="text" id="customer-name" required class="w-full p-3 rounded-lg bg-gray-700/50 text-white border border-gray-600 focus:ring-1 focus:ring-tg-accent" placeholder="Іван Іванович">
+                </div>
+                <div class="mb-4">
+                    <label for="customer-phone" class="block text-gray-400 mb-1">Телефон *</label>
+                    <input type="tel" id="customer-phone" required class="w-full p-3 rounded-lg bg-gray-700/50 text-white border border-gray-600 focus:ring-1 focus:ring-tg-accent" placeholder="+380XXXXXXXXX">
+                </div>
+                
+                <div class="mb-6">
+                    <label for="customer-address" class="block text-gray-400 mb-1">Куди доставити (Пошта) *</label>
+                    <textarea id="customer-address" required rows="2" class="w-full p-3 rounded-lg bg-gray-700/50 text-white border border-gray-600 focus:ring-1 focus:ring-tg-accent" placeholder="Місто, Нова Пошта №1"></textarea>
+                </div>
+
+                <div class="flex space-x-3">
+                    <button type="button" id="back-to-cart" class="flex-1 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-xl transition duration-200">
+                        Назад
+                    </button>
+                    <button type="submit" class="flex-1 py-3 checkout-button text-tg-dark font-bold rounded-xl shadow-lg">
+                        Надіслати
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        // 1. Імпортуємо Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+        // 🔥 ТВОЇ КЛЮЧІ 🔥
+        const firebaseConfig = {
+            apiKey: "AIzaSyCKQbLkpj8Rz3qmY54sWl-a0uy27XdX38w",
+            authDomain: "mywebapp-15246.firebaseapp.com",
+            projectId: "mywebapp-15246",
+            storageBucket: "mywebapp-15246.firebasestorage.app",
+            messagingSenderId: "855671366648",
+            appId: "1:855671366648:web:f10adeeda588a868a62c0d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // ----------------------------------------------------
+        // ЗМІННІ
+        // ----------------------------------------------------
+        const MANAGER_USERNAME = "arizon1"; 
+        
+        // Масив товарів (буде заповнено з бази)
+        let products = []; 
+        let cart = []; 
+        let currentCategory = "all"; 
+
+        // ----------------------------------------------------
+        // ГОЛОВНА ФУНКЦІЯ: ОТРИМАННЯ ДАНИХ
+        // ----------------------------------------------------
+        onSnapshot(collection(db, "products"), (snapshot) => {
+            products = [];
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                // АДАПТАЦІЯ КАРТИНОК
+                // Якщо в базі масив images (нова адмінка), беремо першу картинку.
+                // Якщо рядок image (стара адмінка), беремо його.
+                let imageSrc = "https://placehold.co/300x200/333333/C2D8C4?text=No+Image";
+                
+                if (data.images && Array.isArray(data.images) && data.images.length > 0) {
+                    imageSrc = data.images[0];
+                } else if (data.image) {
+                    imageSrc = data.image;
+                }
+
+                products.push({ 
+                    id: doc.id, 
+                    ...data, 
+                    image: imageSrc // Тепер у нас завжди є поле image для шаблону
+                });
+            });
+
+            renderFeaturedProducts();
+            renderCategories();
+            renderProducts();
+        });
+
+        // ----------------------------------------------------
+        // ФУНКЦІЇ ІНТЕРФЕЙСУ (Ті самі, що й були)
+        // ----------------------------------------------------
+
+        // Збереження функцій у window, бо ми в модулі
+        window.addToCart = addToCart;
+        window.updateQuantity = updateQuantity;
+        window.showPage = showPage;
+        window.setCategory = setCategory;
+
+        function showToast(message, bgColor = 'bg-tg-accent/80') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            let icon = 'check-circle';
+            if (message.includes('⚠️')) { bgColor = 'bg-red-600/90'; icon = 'alert-triangle'; }
+            
+            toast.className = `glass-card ${bgColor} text-tg-dark px-5 py-3 rounded-xl shadow-2xl transition-all duration-500 opacity-0 transform translate-y-[-10px] flex items-center space-x-2 fixed top-4 left-1/2 -translate-x-1/2 z-[2000]`;
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5 text-tg-dark"></i><span class="text-white">${message.replace(/⚠️/g, '').trim()}</span>`;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => { toast.classList.remove('opacity-0', 'translate-y-[-10px]'); toast.classList.add('opacity-100', 'translate-y-0'); }, 50);
+            setTimeout(() => { toast.remove(); }, 3000);
+        }
+
+        function saveCartToLocalStorage() { localStorage.setItem('luxCart', JSON.stringify(cart)); }
+        function loadCartFromLocalStorage() {
+            try {
+                const savedCart = localStorage.getItem('luxCart');
+                if (savedCart) cart = JSON.parse(savedCart);
+            } catch (error) { console.error(error); cart = []; }
+        }
+
+        function addToCart(productId) {
+            const product = products.find(p => p.id == productId);
+            if (!product) return;
+            if (product.inStock === false) return showToast(`⚠️ Немає в наявності`, 'bg-red-600/90');
+
+            const existingItem = cart.find(item => item.id == productId);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+            saveCartToLocalStorage();
+            updateCartUI();
+            showToast(`"${product.name}" у кошику!`);
+        }
+
+        function updateQuantity(productId, change) {
+            const itemIndex = cart.findIndex(item => item.id == productId);
+            if (itemIndex === -1) return;
+            cart[itemIndex].quantity += change;
+            if (cart[itemIndex].quantity <= 0) cart.splice(itemIndex, 1);
+            saveCartToLocalStorage();
+            updateCartUI();
+        }
+
+        function showPage(pageId) {
+            const mainContent = document.querySelector('main');
+            mainContent.style.opacity = 0;
+            setTimeout(() => {
+                document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+                document.getElementById(`${pageId}-page`).classList.remove('hidden');
+
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                const activeNav = document.querySelector(`.nav-link[data-page="${pageId}"]`);
+                if (activeNav) activeNav.classList.add('active');
+
+                if (pageId === 'catalog') { renderCategories(); renderProducts(); }
+                else if (pageId === 'cart') { updateCartUI(); }
+
+                mainContent.style.opacity = 1;
+            }, 300);
+        }
+
+        function renderCategories() {
+            const container = document.querySelector('.category-container');
+            if (!container) return;
+            const uniqueCategories = ['Всі', ...new Set(products.map(p => p.category))];
+            
+            container.innerHTML = uniqueCategories.map(cat => {
+                const categoryKey = cat === 'Всі' ? 'all' : cat;
+                const activeClass = categoryKey === currentCategory ? 'active bg-tg-accent/10' : 'hover:bg-gray-700/50';
+                return `<button onclick="window.setCategory('${categoryKey}')" class="category-btn ${activeClass} px-4 py-2 text-sm font-medium rounded-lg border-b-2 border-transparent transition duration-500 text-white">${cat}</button>`;
+            }).join('');
+        }
+        
+        function setCategory(cat) {
+            currentCategory = cat;
+            renderCategories();
+            renderProducts();
+        }
+
+        function renderProductCard(product) {
+            const isAvailable = product.inStock !== false;
+            const buttonContent = isAvailable 
+                ? `<button onclick="window.addToCart('${product.id}')" class="px-3 py-2 checkout-button text-sm font-semibold rounded-lg shadow-lg transform hover:scale-[1.05]">
+                    <i data-lucide="plus" class="w-4 h-4 inline mr-1 text-tg-dark"></i> Додати
+                   </button>`
+                : `<span class="text-xs text-red-400">Немає</span>`;
+
+            return `
+                <div class="glass-card rounded-2xl p-4 flex flex-col justify-between">
+                    <div class="relative overflow-hidden rounded-xl mb-4 h-36">
+                         <img src="${product.image}" class="w-full h-full object-cover product-image transform hover:scale-110">
+                         ${product.featured ? '<span class="absolute top-2 left-2 px-2 py-1 bg-tg-accent/80 text-tg-dark text-xs font-bold rounded-md">ТОП</span>' : ''}
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white mb-1 truncate">${product.name}</h3>
+                        <p class="text-xs text-gray-400 mb-3 h-8 overflow-hidden line-clamp-2">${product.description || ''}</p>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-gray-700/50">
+                        <span class="text-xl font-extrabold text-tg-accent">${product.price} грн</span>
+                        ${buttonContent}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderFeaturedProducts() {
+            const container = document.getElementById('featured-products');
+            const featured = products.filter(p => p.featured === true);
+            container.innerHTML = featured.length ? featured.map(renderProductCard).join('') : '<p class="text-gray-500">Пусто...</p>';
+            lucide.createIcons();
+        }
+
+        function renderProducts() {
+            const container = document.getElementById('products-grid');
+            const filtered = currentCategory === 'all' ? products : products.filter(p => p.category === currentCategory);
+            container.innerHTML = filtered.length ? filtered.map(renderProductCard).join('') : '<p class="text-gray-400 col-span-full text-center">Пусто...</p>';
+            lucide.createIcons();
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cart-items');
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            document.getElementById('cart-count').textContent = totalItems;
+            document.getElementById('cart-count').classList.toggle('hidden', totalItems === 0);
+            document.getElementById('total-price-display').textContent = `${totalPrice} грн`;
+            document.getElementById('checkout-btn').disabled = cart.length === 0;
+            document.getElementById('empty-cart').classList.toggle('hidden', cart.length > 0);
+            document.getElementById('cart-summary').classList.toggle('hidden', cart.length === 0);
+
+            container.innerHTML = cart.map(item => `
+                <div class="flex flex-col sm:flex-row items-center glass-card rounded-xl p-4 mb-4 justify-between border-gray-700/50">
+                    <div class="flex items-center w-full sm:w-1/2 mb-3 sm:mb-0">
+                        <img src="${item.image}" class="w-12 h-12 rounded-lg mr-4 object-cover">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">${item.name}</h3>
+                            <p class="text-sm text-gray-400">${item.price} x ${item.quantity} = ${item.price * item.quantity} грн</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center glass-card rounded-lg p-1">
+                         <button onclick="window.updateQuantity('${item.id}', -1)" class="p-1 text-red-400"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                         <span class="text-lg font-bold w-6 text-center text-white">${item.quantity}</span>
+                         <button onclick="window.updateQuantity('${item.id}', 1)" class="p-1 text-tg-accent"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // ІНІЦІАЛІЗАЦІЯ
+        window.onload = () => {
+            loadCartFromLocalStorage();
+            showPage('home');
+            
+            document.querySelectorAll('.nav-link, .hero-cta').forEach(btn => {
+                btn.onclick = (e) => showPage(e.currentTarget.getAttribute('data-page'));
+            });
+            
+            document.getElementById('checkout-btn').onclick = () => {
+                if(cart.length === 0) return showToast('Кошик порожній');
+                document.getElementById('checkout-modal').style.display = 'flex';
+            }
+            document.getElementById('back-to-cart').onclick = () => {
+                document.getElementById('checkout-modal').style.display = 'none';
+            }
+
+            document.getElementById('checkout-form').onsubmit = (e) => {
+                e.preventDefault();
+                const name = document.getElementById('customer-name').value;
+                const phone = document.getElementById('customer-phone').value;
+                const address = document.getElementById('customer-address').value;
+                
+                let msg = `🛒 *ЗАМОВЛЕННЯ*\n👤 ${name}\n📞 ${phone}\n🚚 ${address}\n\n`;
+                cart.forEach(i => msg += `- ${i.name} (${i.quantity}шт) = ${i.price * i.quantity} грн\n`);
+                msg += `\n💰 Всього: ${document.getElementById('total-price-display').textContent}`;
+
+                const url = `https://t.me/${MANAGER_USERNAME}?text=${encodeURIComponent(msg)}`;
+                window.open(url, '_blank');
+                
+                cart = [];
+                saveCartToLocalStorage();
+                updateCartUI();
+                document.getElementById('checkout-modal').style.display = 'none';
+            };
+        };
+    </script>
+</body>
+</html>

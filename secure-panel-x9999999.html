@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Lux Market</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+            color: #f3f4f6;
+            min-height: 100vh;
+        }
+
+        .glass-panel {
+            background: rgba(30, 30, 30, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(194, 216, 196, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        .glass-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .glass-input:focus {
+            background: rgba(0, 0, 0, 0.5);
+            border-color: #C2D8C4;
+            outline: none;
+            box-shadow: 0 0 15px rgba(194, 216, 196, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, #9bb39d, #C2D8C4);
+            color: #111;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:hover { 
+            transform: scale(1.02); 
+            box-shadow: 0 0 20px rgba(194, 216, 196, 0.3);
+        }
+        
+        /* Екран блокування */
+        #lock-screen {
+            position: fixed; inset: 0; z-index: 9999;
+            background: #0d0d0d;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        /* Скролбар */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+    </style>
+    
+    <script>
+        tailwind.config = { theme: { extend: { colors: { 'tg-accent': '#C2D8C4' } } } }
+    </script>
+</head>
+<body class="p-4 md:p-8 overflow-hidden">
+
+    <div id="lock-screen">
+        <div class="glass-panel p-8 rounded-3xl w-full max-w-sm text-center border border-white/10 mx-4">
+            <div class="w-20 h-20 bg-tg-accent/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-tg-accent/20">
+                <i data-lucide="lock" class="w-10 h-10 text-tg-accent"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-white mb-2">Admin Access</h2>
+            <p class="text-gray-500 mb-6 text-sm">Введіть пароль доступу</p>
+            
+            <form id="login-form" class="space-y-4">
+                <input type="password" id="pass-input" placeholder="Пароль" class="glass-input w-full p-4 rounded-xl text-center tracking-widest">
+                <button type="submit" class="w-full py-4 rounded-xl btn-primary text-lg shadow-lg">
+                    Увійти
+                </button>
+            </form>
+            <p id="error-msg" class="text-red-500 text-xs mt-4 hidden">Невірний пароль!</p>
+        </div>
+    </div>
+
+    <div id="main-content" class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 opacity-0 transition-opacity duration-500">
+        
+        <div class="lg:col-span-5">
+            <div class="glass-panel rounded-3xl p-6 sticky top-6">
+                <div class="flex items-center mb-6 pb-4 border-b border-gray-700/50">
+                    <div class="bg-tg-accent/10 p-2 rounded-lg mr-3">
+                        <i data-lucide="plus" class="text-tg-accent w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-white">Новий товар</h2>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs text-gray-400 uppercase font-bold ml-1">Назва</label>
+                        <input id="inp-name" type="text" placeholder="Наприклад: Сумка Prada" class="glass-input w-full p-3 rounded-xl mt-1">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs text-gray-400 uppercase font-bold ml-1">Ціна (грн)</label>
+                            <input id="inp-price" type="number" placeholder="0" class="glass-input w-full p-3 rounded-xl mt-1">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 uppercase font-bold ml-1">Категорія</label>
+                            <select id="inp-category" class="glass-input w-full p-3 rounded-xl mt-1 cursor-pointer appearance-none">
+                                <option value="Одяг">👕 Одяг</option>
+                                <option value="Взуття">👟 Взуття</option>
+                                <option value="Аксесуари">👜 Аксесуари</option>
+                                <option value="Техніка">📱 Техніка</option>
+                                <option value="Інше">📦 Інше</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-gray-400 uppercase font-bold ml-1">Фото (Кожне з нового рядка!)</label>
+                        <div class="relative">
+                            <textarea id="inp-images" rows="4" placeholder="https://site.com/photo1.jpg&#10;https://site.com/photo2.jpg" class="glass-input w-full p-3 rounded-xl mt-1 pl-10 font-mono text-xs"></textarea>
+                            <i data-lucide="images" class="absolute left-3 top-4 w-4 h-4 text-gray-500"></i>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-gray-400 uppercase font-bold ml-1">Опис</label>
+                        <textarea id="inp-desc" rows="3" placeholder="Детальний опис..." class="glass-input w-full p-3 rounded-xl mt-1"></textarea>
+                    </div>
+
+                    <label class="flex items-center space-x-3 bg-white/5 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition border border-transparent hover:border-tg-accent/30">
+                        <input type="checkbox" id="inp-featured" class="w-5 h-5 accent-[#C2D8C4] rounded bg-gray-700 border-none">
+                        <div>
+                            <span class="text-sm text-white font-bold block">🔥 Топ пропозиція</span>
+                        </div>
+                    </label>
+
+                    <button id="addBtn" class="w-full py-4 rounded-xl btn-primary text-lg shadow-xl mt-4 flex justify-center items-center gap-2">
+                        <i data-lucide="save" class="w-5 h-5"></i> Опублікувати
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-7">
+            <div class="glass-panel rounded-3xl p-6 h-full min-h-[600px] flex flex-col">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-700/50">
+                    <div class="flex items-center">
+                        <div class="bg-gray-700/50 p-2 rounded-lg mr-3">
+                            <i data-lucide="package" class="text-gray-300 w-6 h-6"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-white">Склад</h2>
+                    </div>
+                    <span id="count-badge" class="bg-tg-accent text-black text-xs font-bold px-3 py-1 rounded-full">0</span>
+                </div>
+
+                <div id="product-list" class="space-y-3 overflow-y-auto flex-1 pr-2 max-h-[70vh]">
+                    <p class="text-gray-500 text-center mt-20">Завантаження...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+        // 🔥 КОНФІГ (Твій) 🔥
+        const firebaseConfig = {
+            apiKey: "AIzaSyCKQbLkpj8Rz3qmY54sWl-a0uy27XdX38w",
+            authDomain: "mywebapp-15246.firebaseapp.com",
+            projectId: "mywebapp-15246",
+            storageBucket: "mywebapp-15246.firebasestorage.app",
+            messagingSenderId: "855671366648",
+            appId: "1:855671366648:web:f10adeeda588a868a62c0d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 🔐 ЛОГІКА ПАРОЛЯ
+        const SECRET_PASS = "admin123"; // <--- ЗМІНИ ЦЕЙ ПАРОЛЬ НА СВІЙ
+
+        // Перевірка, чи вже входив користувач (щоб не вводити щоразу при оновленні)
+        if(sessionStorage.getItem('isAdmin') === 'true') {
+            unlockScreen();
+        }
+
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = document.getElementById('pass-input').value;
+            
+            if(input === SECRET_PASS) {
+                sessionStorage.setItem('isAdmin', 'true'); // Запам'ятати в сесії
+                unlockScreen();
+            } else {
+                const err = document.getElementById('error-msg');
+                err.classList.remove('hidden');
+                err.classList.add('animate-pulse');
+                document.getElementById('pass-input').value = '';
+            }
+        });
+
+        function unlockScreen() {
+            const lock = document.getElementById('lock-screen');
+            const content = document.getElementById('main-content');
+            
+            lock.style.transition = "opacity 0.5s ease";
+            lock.style.opacity = "0";
+            setTimeout(() => lock.style.display = 'none', 500);
+            
+            document.body.style.overflow = "auto";
+            content.style.opacity = "1";
+            
+            // Завантажуємо іконки після відкриття
+            lucide.createIcons();
+        }
+
+
+        // 🛍️ ЛОГІКА МАГАЗИНУ (Та сама)
+        document.getElementById('addBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('addBtn');
+            const name = document.getElementById('inp-name').value;
+            const price = document.getElementById('inp-price').value;
+            
+            const rawImages = document.getElementById('inp-images').value;
+            const imagesArray = rawImages.split('\n').map(u => u.trim()).filter(u => u.length > 0);
+            
+            if(!name || !price) return alert("Введи дані!");
+
+            btn.disabled = true;
+            btn.innerText = "Зберігаю...";
+
+            try {
+                await addDoc(collection(db, "products"), {
+                    name: name,
+                    price: Number(price),
+                    category: document.getElementById('inp-category').value,
+                    images: imagesArray.length ? imagesArray : ["https://placehold.co/400?text=No+Img"],
+                    description: document.getElementById('inp-desc').value,
+                    featured: document.getElementById('inp-featured').checked,
+                    inStock: true,
+                    createdAt: new Date()
+                });
+
+                // Очистка
+                document.getElementById('inp-name').value = '';
+                document.getElementById('inp-price').value = '';
+                document.getElementById('inp-images').value = '';
+                document.getElementById('inp-desc').value = '';
+                
+                btn.innerText = "Опублікувати";
+                btn.disabled = false;
+            } catch (e) {
+                alert("Помилка: " + e.message);
+                btn.disabled = false;
+            }
+        });
+
+        // Список
+        const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
+        onSnapshot(q, (snapshot) => {
+            const list = document.getElementById('product-list');
+            document.getElementById('count-badge').innerText = snapshot.size;
+            
+            if(snapshot.empty) {
+                list.innerHTML = '<p class="text-center text-gray-500">Пусто</p>';
+                return;
+            }
+
+            list.innerHTML = '';
+            snapshot.forEach((docSnap) => {
+                const p = docSnap.data();
+                const id = docSnap.id;
+                let img = "https://placehold.co/100?text=No+Img";
+                if(p.images && p.images.length) img = p.images[0];
+                else if(p.image) img = p.image;
+
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between bg-white/5 p-3 rounded-2xl border border-transparent hover:border-tg-accent/30 transition";
+                item.innerHTML = `
+                    <div class="flex items-center space-x-4 overflow-hidden">
+                        <img src="${img}" class="w-12 h-12 rounded-xl object-cover bg-gray-800">
+                        <div class="min-w-0">
+                            <h4 class="text-sm font-bold text-white truncate">${p.name}</h4>
+                            <p class="text-xs text-gray-400">${p.price} грн</p>
+                        </div>
+                    </div>
+                    <button class="delete-btn p-2 text-gray-500 hover:text-red-400" data-id="${id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                `;
+                list.appendChild(item);
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    if(confirm("Видалити?")) await deleteDoc(doc(db, "products", e.currentTarget.dataset.id));
+                });
+            });
+            lucide.createIcons();
+        });
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
