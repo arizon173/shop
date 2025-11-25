@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HappyFoot Admin</title>
     
-    <!-- === PWA / FULL SCREEN / IOS FIXES === -->
+    <!-- === PWA / FULL SCREEN SETTINGS === -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#04273b"> <!-- Колір верхньої смуги -->
+    <meta name="theme-color" content="#04273b"> 
+    <!-- DISPLAY MODE (Crucial for fullscreen behavior) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <!-- ======================================= -->
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,19 +25,31 @@
         /* Brand Colors */
         .bg-brand { background-color: #04273b; }
         .text-brand { color: #04273b; }
+        .border-brand { border-color: #04273b; }
         
         .screen { display: none; }
         .screen.active { display: block; }
         
+        /* Tabs Animation */
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* Modal Animation */
         .modal-enter { animation: modalUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes modalUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         
         .safe-bottom { padding-bottom: 100px; }
+
+        /* --- АНІМАЦІЯ ГАЛОЧКИ (SUCCESS) --- */
+        .checkmark-circle { width: 80px; height: 80px; position: relative; display: inline-block; vertical-align: top; }
+        .checkmark-circle .background { width: 80px; height: 80px; border-radius: 50%; background: #22c55e; position: absolute; transform: scale(0); animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both; }
+        .checkmark-circle .checkmark { border-radius: 5px; stroke-width: 3; stroke: #fff; stroke-miterlimit: 10; box-shadow: inset 0px 0px 0px #22c55e; margin: 0 auto; position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 10; }
+        .checkmark-circle .check { transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48; animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards; }
+        @keyframes stroke { 100% { stroke-dashoffset: 0; } }
+        @keyframes scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
+        @keyframes fill { 100% { transform: scale(1); box-shadow: inset 0px 0px 0px 30px #22c55e; } }
     </style>
 </head>
 <body class="text-slate-800 h-screen overflow-hidden flex flex-col">
@@ -74,7 +89,7 @@
                 </h1>
                 <p class="text-xs text-slate-400 font-medium" id="current-date">Завантаження...</p>
             </div>
-            <button onclick="logout()" class="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-red-500 transition active:bg-red-50">
+            <button onclick="askLogout()" class="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-red-500 transition active:bg-red-50">
                 <span class="material-icons-round" style="font-size: 20px;">logout</span>
             </button>
         </header>
@@ -258,7 +273,6 @@
             document.getElementById('c-title').innerText = title;
             document.getElementById('c-text').innerText = text;
 
-            // Icons
             if(type === 'danger') {
                 iconCont.innerHTML = `<div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-500"><span class="material-icons-round text-3xl">warning</span></div>`;
             } else if (type === 'success') {
@@ -267,7 +281,6 @@
                 iconCont.innerHTML = `<div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-brand"><span class="material-icons-round text-3xl">info</span></div>`;
             }
 
-            // Buttons
             if (onConfirm) {
                 btns.innerHTML = `
                     <button onclick="closeCustomModal()" class="flex-1 py-3 rounded-xl border border-slate-200 text-slate-500 font-bold text-sm">НІ</button>
@@ -344,6 +357,8 @@
                     document.getElementById('login-screen').classList.remove('active');
                     document.getElementById('dashboard-screen').classList.add('active');
                     startListening();
+                    // Set default tab on success
+                    switchTab('active');
                 }, 300);
             } else {
                 showModal('Помилка', 'Невірний PIN-код. Спробуйте 1111.', 'danger');
@@ -382,6 +397,7 @@
                 currentAppointments = [];
                 
                 let newCount = 0;
+                // Сьогоднішня дата у форматі YYYY-MM-DD
                 const today = new Date().toISOString().split('T')[0];
 
                 snapshot.forEach((docSnap) => {
@@ -393,19 +409,22 @@
 
                     if(isNew) newCount++;
 
+                    // LOGIC: History if date is past
                     const isHistory = data.date < today;
-                    const isConfirmed = data.status === 'confirmed';
 
                     const card = document.createElement('div');
                     card.onclick = () => openDetails(id);
                     
-                    let statusBorder = isNew ? 'border-l-[6px] border-[#04273b]' : (isConfirmed ? 'border-l-[6px] border-green-500' : 'border-l-4 border-slate-300');
+                    // Card Styling based on status
+                    let statusBorder = 'border-l-4 border-slate-300';
+                    if(isNew) statusBorder = 'border-l-[6px] border-[#04273b]';
+                    else if(data.status === 'confirmed') statusBorder = 'border-l-[6px] border-green-500';
 
                     card.className = `relative bg-white p-4 rounded-xl shadow-sm ${statusBorder} mb-3 cursor-pointer active:scale-[0.98] transition-transform fade-in`;
                     
                     let statusLabel = '';
                     if(isNew) statusLabel = '<span class="bg-sky-100 text-sky-700 text-[10px] font-bold px-2 py-1 rounded uppercase">НОВИЙ</span>';
-                    else if(isConfirmed) statusLabel = '<span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded uppercase">OK</span>';
+                    else if(data.status === 'confirmed') statusLabel = '<span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded uppercase">OK</span>';
                     else statusLabel = '<span class="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-1 rounded uppercase">АРХІВ</span>';
 
 
@@ -442,6 +461,7 @@
                 }
                 
                 if(listActive.innerHTML === '') listActive.innerHTML = '<div class="text-center text-slate-400 mt-10">На сьогодні/завтра записів немає</div>';
+                if(listHistory.innerHTML === '') listHistory.innerHTML = '<div class="text-center text-slate-400 mt-10">Архів порожній</div>';
             });
         }
 
@@ -461,20 +481,22 @@
             const btnEditToggle = document.getElementById('btn-edit-toggle');
             const sContainer = document.getElementById('modal-status-container');
             
-            const isFinished = data.date < new Date().toISOString().split('T')[0];
+            const today = new Date().toISOString().split('T')[0];
+            const isFinished = data.date < today;
 
-            if(data.status === 'new') {
+            // Resetting visibility based on business rules
+            btnConfirm.classList.add('hidden');
+            btnEditToggle.classList.add('hidden');
+            
+            if (isFinished) {
+                 sContainer.innerHTML = '<span class="bg-slate-100 text-slate-500 text-xs font-bold px-3 py-1 rounded-full uppercase">ІСТОРІЯ</span>';
+            } else if (data.status === 'new') {
                 sContainer.innerHTML = '<span class="bg-sky-100 text-sky-700 text-xs font-bold px-3 py-1 rounded-full uppercase">НОВИЙ ЗАПИС</span>';
-                btnConfirm.classList.remove('hidden');
-                btnEditToggle.classList.remove('hidden');
-            } else if(data.status === 'confirmed' && !isFinished) {
+                btnConfirm.classList.remove('hidden'); // Show Confirm
+                btnEditToggle.classList.remove('hidden'); // Show Edit
+            } else if (data.status === 'confirmed') {
                  sContainer.innerHTML = '<span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full uppercase">ПІДТВЕРДЖЕНО ✅</span>';
-                 btnConfirm.classList.add('hidden'); // Вже підтверджено
-                 btnEditToggle.classList.remove('hidden');
-            } else {
-                sContainer.innerHTML = '<span class="bg-slate-100 text-slate-500 text-xs font-bold px-3 py-1 rounded-full uppercase">ІСТОРІЯ</span>';
-                btnConfirm.classList.add('hidden');
-                btnEditToggle.classList.add('hidden');
+                 btnEditToggle.classList.remove('hidden'); // Show Edit
             }
 
             toggleEdit(false);
@@ -506,10 +528,50 @@
                 display.classList.remove('hidden');
                 const id = document.getElementById('current-id').value;
                 const data = currentAppointments.find(a => a.id === id);
-                // Показуємо кнопку підтвердження, якщо статус NEW
-                if(data && data.status === 'new') {
+                
+                // Show confirm button only if status is NEW and not archived
+                if(data && data.status === 'new' && data.date >= new Date().toISOString().split('T')[0]) {
                     confirmBtn.classList.remove('hidden');
                 }
+            }
+        }
+
+        window.saveEdit = async function() {
+            const id = document.getElementById('current-id').value;
+            const newDate = document.getElementById('edit-date').value;
+            const newTime = document.getElementById('edit-time').value;
+
+            if(!newDate || !newTime) return showModal('Помилка', 'Заповніть поля дати та часу.', 'danger');
+
+            try {
+                await updateDoc(doc(db, "appointments", id), {
+                    date: newDate,
+                    time: newTime
+                });
+                closeDetails();
+                playSuccess();
+            } catch (e) { showModal('Помилка', e.message, 'danger'); }
+        }
+
+        window.confirmFromModal = async function() {
+            const id = document.getElementById('current-id').value;
+            if(confirm('Підтвердити цей запис?')) {
+                try {
+                    await updateDoc(doc(db, "appointments", id), { status: "confirmed" });
+                    closeDetails();
+                    playSuccess();
+                } catch (e) { alert(e.message); }
+            }
+        }
+
+        window.deleteFromModal = async function() {
+            const id = document.getElementById('current-id').value;
+            if(confirm('ВИДАЛИТИ запис назавжди?')) {
+                try {
+                    await deleteDoc(doc(db, "appointments", id));
+                    closeDetails();
+                    playSuccess();
+                } catch (e) { alert(e.message); }
             }
         }
 
