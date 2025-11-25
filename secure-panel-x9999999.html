@@ -4,49 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HappyFoot Admin</title>
+    
+    <!-- === PWA / FULL SCREEN / IOS FIXES === -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#04273b"> <!-- Колір верхньої смуги -->
+    <!-- ======================================= -->
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         
         /* Brand Colors */
         .bg-brand { background-color: #04273b; }
         .text-brand { color: #04273b; }
-        .border-brand { border-color: #04273b; }
         
         .screen { display: none; }
         .screen.active { display: block; }
         
-        /* Анімації */
-        .fade-in { animation: fadeIn 0.3s ease; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         .modal-enter { animation: modalUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes modalUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes modalUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         
         .safe-bottom { padding-bottom: 100px; }
-
-        /* --- АНІМАЦІЯ ГАЛОЧКИ (SUCCESS) --- */
-        .checkmark-circle {
-            width: 80px; height: 80px; position: relative; display: inline-block; vertical-align: top;
-        }
-        .checkmark-circle .background {
-            width: 80px; height: 80px; border-radius: 50%; background: #22c55e; position: absolute;
-            transform: scale(0); animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
-        }
-        .checkmark-circle .checkmark {
-            border-radius: 5px; stroke-width: 3; stroke: #fff; stroke-miterlimit: 10;
-            box-shadow: inset 0px 0px 0px #22c55e; margin: 0 auto; position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 10;
-        }
-        .checkmark-circle .check {
-            transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48;
-            animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
-        }
-        @keyframes stroke { 100% { stroke-dashoffset: 0; } }
-        @keyframes scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
-        @keyframes fill { 100% { transform: scale(1); box-shadow: inset 0px 0px 0px 30px #22c55e; } }
     </style>
 </head>
 <body class="text-slate-800 h-screen overflow-hidden flex flex-col">
@@ -86,7 +74,7 @@
                 </h1>
                 <p class="text-xs text-slate-400 font-medium" id="current-date">Завантаження...</p>
             </div>
-            <button onclick="askLogout()" class="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-red-500 transition active:bg-red-50">
+            <button onclick="logout()" class="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-red-500 transition active:bg-red-50">
                 <span class="material-icons-round" style="font-size: 20px;">logout</span>
             </button>
         </header>
@@ -94,9 +82,9 @@
         <!-- Main List Area -->
         <div class="flex-1 overflow-y-auto p-4 safe-bottom scroll-smooth bg-[#f8fafc] w-full relative">
             
-            <!-- Tab 1: Нові (Active) -->
-            <div id="tab-new" class="tab-content active space-y-3">
-                <div id="list-new" class="space-y-3 w-full">
+            <!-- Tab 1: Розклад (Сьогодні + Майбутнє) -->
+            <div id="tab-active" class="tab-content active space-y-3">
+                <div id="list-active" class="space-y-3 w-full">
                     <div class="flex flex-col items-center justify-center h-64 text-slate-300 animate-pulse">
                         <span class="material-icons-round text-5xl mb-3">cloud_sync</span>
                         <p class="text-sm font-medium">Отримання даних...</p>
@@ -104,10 +92,10 @@
                 </div>
             </div>
 
-            <!-- Tab 2: Архів (History) -->
+            <!-- Tab 2: Історія (Минуле) -->
             <div id="tab-history" class="tab-content space-y-3">
-                <div id="list-history" class="space-y-3 opacity-80 w-full">
-                    <!-- Сюди JS закине старі записи -->
+                <div id="list-history" class="space-y-3 opacity-70 w-full">
+                    <!-- JS сюди закине старі -->
                 </div>
             </div>
 
@@ -116,9 +104,9 @@
         <!-- Bottom Navigation (Tabs) -->
         <div class="bg-white/95 backdrop-blur-lg border-t border-slate-200 p-2 flex justify-around items-center pb-safe z-20 fixed bottom-0 w-full shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
             
-            <button onclick="switchTab('new')" id="btn-tab-new" class="flex flex-col items-center text-brand p-2 w-1/2 rounded-xl transition-all">
-                <span class="material-icons-round text-2xl mb-1">mail</span>
-                <span class="text-[10px] font-bold uppercase tracking-wide">Вхідні</span>
+            <button onclick="switchTab('active')" id="btn-tab-active" class="flex flex-col items-center text-brand p-2 w-1/2 rounded-xl transition-all">
+                <span class="material-icons-round text-2xl mb-1">event_note</span>
+                <span class="text-[10px] font-bold uppercase tracking-wide">Розклад</span>
                 <span id="badge-new" class="hidden absolute top-3 ml-6 bg-red-500 text-white text-[9px] px-1.5 rounded-full border-2 border-white shadow-sm">0</span>
             </button>
             
@@ -126,7 +114,7 @@
 
             <button onclick="switchTab('history')" id="btn-tab-history" class="flex flex-col items-center text-slate-400 p-2 w-1/2 rounded-xl transition-all hover:bg-slate-50">
                 <span class="material-icons-round text-2xl mb-1">history</span>
-                <span class="text-[10px] font-bold uppercase tracking-wide">Архів</span>
+                <span class="text-[10px] font-bold uppercase tracking-wide">Історія</span>
             </button>
 
         </div>
@@ -163,7 +151,7 @@
                 </div>
             </div>
 
-            <!-- Edit Form -->
+            <!-- Edit Form (Hidden by default) -->
             <div id="edit-form" class="hidden mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200">
                 <h4 class="text-sm font-bold text-brand mb-3 flex items-center gap-2">
                     <span class="material-icons-round text-sm">edit</span> Зміна запису
@@ -188,7 +176,7 @@
             <!-- Actions -->
             <div class="space-y-3">
                 <button id="btn-edit-toggle" onclick="toggleEdit(true)" class="w-full py-3.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 flex items-center justify-center gap-2 transition">
-                    <span class="material-icons-round text-lg">edit_calendar</span> ПЕРЕНЕСТИ
+                    <span class="material-icons-round text-lg">edit_calendar</span> ПЕРЕНЕСТИ / ЗМІНИТИ
                 </button>
                 
                 <button id="btn-confirm" onclick="askConfirm()" class="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-sm shadow-lg shadow-green-600/20 active:scale-95 transition-transform flex items-center justify-center gap-2">
@@ -253,6 +241,7 @@
         let currentAppointments = [];
         const WORK_HOURS = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
         
+        // Заповнити селект часу
         const timeSelect = document.getElementById('edit-time');
         WORK_HOURS.forEach(t => {
             const opt = document.createElement('option');
@@ -272,13 +261,14 @@
             // Icons
             if(type === 'danger') {
                 iconCont.innerHTML = `<div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-500"><span class="material-icons-round text-3xl">warning</span></div>`;
+            } else if (type === 'success') {
+                 iconCont.innerHTML = `<div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-green-500"><span class="material-icons-round text-3xl">done</span></div>`;
             } else {
                 iconCont.innerHTML = `<div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-brand"><span class="material-icons-round text-3xl">info</span></div>`;
             }
 
             // Buttons
             if (onConfirm) {
-                // Confirmation Mode
                 btns.innerHTML = `
                     <button onclick="closeCustomModal()" class="flex-1 py-3 rounded-xl border border-slate-200 text-slate-500 font-bold text-sm">НІ</button>
                     <button id="modal-confirm-btn" class="flex-1 py-3 rounded-xl ${type === 'danger' ? 'bg-red-500' : 'bg-brand'} text-white font-bold text-sm shadow-lg">ТАК</button>
@@ -288,7 +278,6 @@
                     onConfirm();
                 };
             } else {
-                // Alert Mode
                 btns.innerHTML = `<button onclick="closeCustomModal()" class="flex-1 py-3 rounded-xl bg-brand text-white font-bold text-sm shadow-lg">ЗРОЗУМІЛО</button>`;
             }
 
@@ -304,39 +293,50 @@
             overlay.classList.remove('hidden');
             setTimeout(() => {
                 overlay.classList.add('hidden');
-            }, 1800); // Показуємо 1.8 сек
+            }, 1800);
         }
 
-        /* --- MAIN LOGIC REPLACEMENT --- */
-
-        window.askLogout = function() {
-            showModal('Вихід', 'Ви впевнені, що хочете вийти?', 'danger', () => location.reload());
-        }
+        /* --- LOGIC WRAPPERS FOR MODALS --- */
 
         window.askConfirm = function() {
-            const id = document.getElementById('current-id').value;
             showModal('Підтвердження', 'Підтвердити запис та перенести в архів?', 'info', async () => {
+                const id = document.getElementById('current-id').value;
                 try {
                     await updateDoc(doc(db, "appointments", id), { status: "confirmed" });
                     closeDetails();
                     playSuccess();
-                } catch (e) { showModal('Помилка', e.message); }
+                } catch (e) { showModal('Помилка', e.message, 'danger'); }
             });
         }
 
         window.askDelete = function() {
-            const id = document.getElementById('current-id').value;
-            showModal('Видалення', 'Це незворотно. Видалити запис?', 'danger', async () => {
+            showModal('Видалення', 'Це незворотно. Видалити запис назавжди?', 'danger', async () => {
+                const id = document.getElementById('current-id').value;
                 try {
                     await deleteDoc(doc(db, "appointments", id));
                     closeDetails();
                     playSuccess();
-                } catch (e) { showModal('Помилка', e.message); }
+                } catch (e) { showModal('Помилка', e.message, 'danger'); }
             });
         }
         
-        // Original logic follows...
+        window.saveEdit = async function() {
+            const id = document.getElementById('current-id').value;
+            const newDate = document.getElementById('edit-date').value;
+            const newTime = document.getElementById('edit-time').value;
 
+            if(!newDate || !newTime) return showModal('Помилка', 'Заповніть поля дати та часу.', 'danger');
+
+            try {
+                await updateDoc(doc(db, "appointments", id), {
+                    date: newDate,
+                    time: newTime
+                });
+                closeDetails();
+                playSuccess();
+            } catch (e) { showModal('Помилка', e.message, 'danger'); }
+        }
+        
         window.checkPin = function() {
             if(document.getElementById('pin-input').value === '1111') {
                 document.getElementById('login-screen').style.opacity = '0';
@@ -346,44 +346,43 @@
                     startListening();
                 }, 300);
             } else {
-                showModal('Помилка', 'Невірний PIN-код', 'danger');
+                showModal('Помилка', 'Невірний PIN-код. Спробуйте 1111.', 'danger');
                 document.getElementById('pin-input').value = '';
             }
         }
+        
+        window.logout = function() { showModal('Вихід', 'Ви впевнені, що хочете вийти?', 'info', () => location.reload()); }
 
+
+        // --- TABS & RENDERING ---
         window.switchTab = function(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tabName}`).classList.add('active');
             
-            document.getElementById('btn-tab-new').className = "flex flex-col items-center text-slate-400 p-2 w-1/2 rounded-xl transition-all hover:bg-slate-50";
+            document.getElementById('btn-tab-active').className = "flex flex-col items-center text-slate-400 p-2 w-1/2 rounded-xl transition-all hover:bg-slate-50";
             document.getElementById('btn-tab-history').className = "flex flex-col items-center text-slate-400 p-2 w-1/2 rounded-xl transition-all hover:bg-slate-50";
             
-            if(tabName === 'new') {
-                document.getElementById('btn-tab-new').className = "flex flex-col items-center text-brand p-2 w-1/2 rounded-xl bg-blue-50/50 transition-all";
+            if(tabName === 'active') {
+                document.getElementById('btn-tab-active').className = "flex flex-col items-center text-brand p-2 w-1/2 rounded-xl bg-blue-50/50 transition-all";
             } else {
                 document.getElementById('btn-tab-history').className = "flex flex-col items-center text-brand p-2 w-1/2 rounded-xl bg-blue-50/50 transition-all";
             }
         }
 
         function startListening() {
-            const listNew = document.getElementById('list-new');
+            const listActive = document.getElementById('list-active');
             const listHistory = document.getElementById('list-history');
             const badgeNew = document.getElementById('badge-new');
 
             const q = query(collection(db, "appointments"), orderBy("date", "asc"));
 
             onSnapshot(q, (snapshot) => {
-                listNew.innerHTML = '';
+                listActive.innerHTML = '';
                 listHistory.innerHTML = '';
                 currentAppointments = [];
                 
                 let newCount = 0;
                 const today = new Date().toISOString().split('T')[0];
-
-                if(snapshot.empty) {
-                    listNew.innerHTML = '<div class="text-center text-slate-400 mt-20">Список порожній</div>';
-                    return;
-                }
 
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
@@ -395,19 +394,20 @@
                     if(isNew) newCount++;
 
                     const isHistory = data.date < today;
+                    const isConfirmed = data.status === 'confirmed';
 
                     const card = document.createElement('div');
                     card.onclick = () => openDetails(id);
                     
-                    let statusBorder = 'border-l-4 border-slate-300'; 
-                    if(isNew) statusBorder = 'border-l-[6px] border-[#04273b]';
-                    else if(data.status === 'confirmed') statusBorder = 'border-l-[6px] border-green-500';
+                    let statusBorder = isNew ? 'border-l-[6px] border-[#04273b]' : (isConfirmed ? 'border-l-[6px] border-green-500' : 'border-l-4 border-slate-300');
 
                     card.className = `relative bg-white p-4 rounded-xl shadow-sm ${statusBorder} mb-3 cursor-pointer active:scale-[0.98] transition-transform fade-in`;
                     
                     let statusLabel = '';
                     if(isNew) statusLabel = '<span class="bg-sky-100 text-sky-700 text-[10px] font-bold px-2 py-1 rounded uppercase">НОВИЙ</span>';
-                    else if(data.status === 'confirmed') statusLabel = '<span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded uppercase">OK</span>';
+                    else if(isConfirmed) statusLabel = '<span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded uppercase">OK</span>';
+                    else statusLabel = '<span class="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-1 rounded uppercase">АРХІВ</span>';
+
 
                     card.innerHTML = `
                         <div class="flex justify-between items-center">
@@ -430,7 +430,7 @@
                     if(isHistory) {
                         listHistory.appendChild(card);
                     } else {
-                        listNew.appendChild(card);
+                        listActive.appendChild(card);
                     }
                 });
 
@@ -441,7 +441,7 @@
                     badgeNew.classList.add('hidden');
                 }
                 
-                if(listNew.innerHTML === '') listNew.innerHTML = '<div class="text-center text-slate-400 mt-10">На сьогодні/завтра записів немає</div>';
+                if(listActive.innerHTML === '') listActive.innerHTML = '<div class="text-center text-slate-400 mt-10">На сьогодні/завтра записів немає</div>';
             });
         }
 
@@ -457,18 +457,24 @@
             document.getElementById('display-time').innerText = data.time || '--:--';
             document.getElementById('modal-avatar').innerText = data.name ? data.name[0].toUpperCase() : '?';
 
-            const sContainer = document.getElementById('modal-status-container');
             const btnConfirm = document.getElementById('btn-confirm');
+            const btnEditToggle = document.getElementById('btn-edit-toggle');
+            const sContainer = document.getElementById('modal-status-container');
             
+            const isFinished = data.date < new Date().toISOString().split('T')[0];
+
             if(data.status === 'new') {
                 sContainer.innerHTML = '<span class="bg-sky-100 text-sky-700 text-xs font-bold px-3 py-1 rounded-full uppercase">НОВИЙ ЗАПИС</span>';
                 btnConfirm.classList.remove('hidden');
-            } else if(data.status === 'confirmed') {
-                sContainer.innerHTML = '<span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full uppercase">ПІДТВЕРДЖЕНО ✅</span>';
-                btnConfirm.classList.add('hidden');
+                btnEditToggle.classList.remove('hidden');
+            } else if(data.status === 'confirmed' && !isFinished) {
+                 sContainer.innerHTML = '<span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full uppercase">ПІДТВЕРДЖЕНО ✅</span>';
+                 btnConfirm.classList.add('hidden'); // Вже підтверджено
+                 btnEditToggle.classList.remove('hidden');
             } else {
-                sContainer.innerHTML = '<span class="bg-gray-100 text-gray-500 text-xs font-bold px-3 py-1 rounded-full uppercase">АРХІВ</span>';
+                sContainer.innerHTML = '<span class="bg-slate-100 text-slate-500 text-xs font-bold px-3 py-1 rounded-full uppercase">ІСТОРІЯ</span>';
                 btnConfirm.classList.add('hidden');
+                btnEditToggle.classList.add('hidden');
             }
 
             toggleEdit(false);
@@ -500,29 +506,11 @@
                 display.classList.remove('hidden');
                 const id = document.getElementById('current-id').value;
                 const data = currentAppointments.find(a => a.id === id);
+                // Показуємо кнопку підтвердження, якщо статус NEW
                 if(data && data.status === 'new') {
                     confirmBtn.classList.remove('hidden');
                 }
             }
-        }
-
-        window.saveEdit = async function() {
-            const id = document.getElementById('current-id').value;
-            const newDate = document.getElementById('edit-date').value;
-            const newTime = document.getElementById('edit-time').value;
-
-            if(!newDate || !newTime) return showModal('Помилка', 'Заповніть всі поля');
-
-            try {
-                await updateDoc(doc(db, "appointments", id), {
-                    date: newDate,
-                    time: newTime
-                });
-                document.getElementById('display-date').innerText = newDate;
-                document.getElementById('display-time').innerText = newTime;
-                toggleEdit(false);
-                playSuccess();
-            } catch (e) { showModal('Помилка', e.message); }
         }
 
         const d = new Date();
