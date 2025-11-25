@@ -2,308 +2,531 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel | Lux Market</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HappyFoot Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
-            color: #f3f4f6;
-            min-height: 100vh;
-        }
-
-        .glass-panel {
-            background: rgba(30, 30, 30, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(194, 216, 196, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-        }
-
-        .glass-input {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            transition: all 0.3s ease;
-        }
-        .glass-input:focus {
-            background: rgba(0, 0, 0, 0.5);
-            border-color: #C2D8C4;
-            outline: none;
-            box-shadow: 0 0 15px rgba(194, 216, 196, 0.1);
-        }
-
-        .btn-primary {
-            background: linear-gradient(to right, #9bb39d, #C2D8C4);
-            color: #111;
-            font-weight: bold;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .btn-primary:hover { 
-            transform: scale(1.02); 
-            box-shadow: 0 0 20px rgba(194, 216, 196, 0.3);
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
-        /* Екран блокування */
-        #lock-screen {
-            position: fixed; inset: 0; z-index: 9999;
-            background: #0d0d0d;
-            display: flex; align-items: center; justify-content: center;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; -webkit-tap-highlight-color: transparent; }
         
-        /* Скролбар */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        /* Brand Colors */
+        .bg-brand { background-color: #04273b; }
+        .text-brand { color: #04273b; }
+        .border-brand { border-color: #04273b; }
+        
+        .screen { display: none; }
+        .screen.active { display: block; }
+        
+        /* Анімації */
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .modal-enter { animation: modalUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes modalUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .safe-bottom { padding-bottom: 100px; }
+
+        /* --- АНІМАЦІЯ ГАЛОЧКИ (SUCCESS) --- */
+        .checkmark-circle {
+            width: 80px; height: 80px; position: relative; display: inline-block; vertical-align: top;
+        }
+        .checkmark-circle .background {
+            width: 80px; height: 80px; border-radius: 50%; background: #22c55e; position: absolute;
+            transform: scale(0); animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+        }
+        .checkmark-circle .checkmark {
+            border-radius: 5px; stroke-width: 3; stroke: #fff; stroke-miterlimit: 10;
+            box-shadow: inset 0px 0px 0px #22c55e; margin: 0 auto; position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 10;
+        }
+        .checkmark-circle .check {
+            transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48;
+            animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+        }
+        @keyframes stroke { 100% { stroke-dashoffset: 0; } }
+        @keyframes scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
+        @keyframes fill { 100% { transform: scale(1); box-shadow: inset 0px 0px 0px 30px #22c55e; } }
     </style>
-    
-    <script>
-        tailwind.config = { theme: { extend: { colors: { 'tg-accent': '#C2D8C4' } } } }
-    </script>
 </head>
-<body class="p-4 md:p-8 overflow-hidden">
+<body class="text-slate-800 h-screen overflow-hidden flex flex-col">
 
-    <div id="lock-screen">
-        <div class="glass-panel p-8 rounded-3xl w-full max-w-sm text-center border border-white/10 mx-4">
-            <div class="w-20 h-20 bg-tg-accent/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-tg-accent/20">
-                <i data-lucide="lock" class="w-10 h-10 text-tg-accent"></i>
+    <!-- === 1. LOGIN SCREEN === -->
+    <div id="login-screen" class="screen active h-full bg-brand flex flex-col items-center justify-center p-6 text-white relative">
+        <div class="z-10 flex flex-col items-center w-full max-w-sm">
+            <div class="mb-12 text-center">
+                <div class="text-5xl font-extrabold mb-2 tracking-tight">Happy<span class="text-sky-400">Foot</span></div>
+                <div class="text-[10px] opacity-50 tracking-[0.5em] uppercase font-bold">Admin Control</div>
             </div>
-            <h2 class="text-2xl font-bold text-white mb-2">Admin Access</h2>
-            <p class="text-gray-500 mb-6 text-sm">Введіть пароль доступу</p>
             
-            <form id="login-form" class="space-y-4">
-                <input type="password" id="pass-input" placeholder="Пароль" class="glass-input w-full p-4 rounded-xl text-center tracking-widest">
-                <button type="submit" class="w-full py-4 rounded-xl btn-primary text-lg shadow-lg">
-                    Увійти
+            <div class="w-full bg-white/5 backdrop-blur-xl p-8 rounded-3xl border border-white/10 shadow-2xl">
+                <p class="text-center text-sky-100/60 text-xs font-bold uppercase mb-4 tracking-widest">Введіть код доступу</p>
+                <input type="password" id="pin-input" placeholder="••••" maxlength="4" inputmode="numeric"
+                       class="w-full bg-slate-900/50 text-white text-center text-4xl tracking-[0.5em] p-4 rounded-2xl border border-white/10 mb-6 focus:border-sky-400 focus:ring-4 focus:ring-sky-400/20 outline-none transition-all placeholder-white/10">
+                
+                <button onclick="checkPin()" class="w-full bg-white text-brand font-bold py-4 rounded-2xl active:scale-[0.98] transition-transform shadow-lg hover:bg-sky-50 flex items-center justify-center gap-2">
+                    <span class="material-icons-round">login</span> УВІЙТИ
                 </button>
-            </form>
-            <p id="error-msg" class="text-red-500 text-xs mt-4 hidden">Невірний пароль!</p>
+            </div>
         </div>
     </div>
 
-    <div id="main-content" class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 opacity-0 transition-opacity duration-500">
+    <!-- === 2. DASHBOARD === -->
+    <div id="dashboard-screen" class="screen h-full flex flex-col relative bg-slate-50">
         
-        <div class="lg:col-span-5">
-            <div class="glass-panel rounded-3xl p-6 sticky top-6">
-                <div class="flex items-center mb-6 pb-4 border-b border-gray-700/50">
-                    <div class="bg-tg-accent/10 p-2 rounded-lg mr-3">
-                        <i data-lucide="plus" class="text-tg-accent w-6 h-6"></i>
+        <!-- Header -->
+        <header class="bg-white px-5 py-4 shadow-sm flex justify-between items-center z-20 border-b border-slate-100 shrink-0">
+            <div>
+                <h1 class="font-bold text-xl text-brand flex items-center gap-2">
+                    HappyFoot
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500"></span>
+                    </span>
+                </h1>
+                <p class="text-xs text-slate-400 font-medium" id="current-date">Завантаження...</p>
+            </div>
+            <button onclick="askLogout()" class="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-red-500 transition active:bg-red-50">
+                <span class="material-icons-round" style="font-size: 20px;">logout</span>
+            </button>
+        </header>
+
+        <!-- Main List Area -->
+        <div class="flex-1 overflow-y-auto p-4 safe-bottom scroll-smooth bg-[#f8fafc] w-full relative">
+            
+            <!-- Tab 1: Нові (Active) -->
+            <div id="tab-new" class="tab-content active space-y-3">
+                <div id="list-new" class="space-y-3 w-full">
+                    <div class="flex flex-col items-center justify-center h-64 text-slate-300 animate-pulse">
+                        <span class="material-icons-round text-5xl mb-3">cloud_sync</span>
+                        <p class="text-sm font-medium">Отримання даних...</p>
                     </div>
-                    <h2 class="text-xl font-bold text-white">Новий товар</h2>
-                </div>
-
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-xs text-gray-400 uppercase font-bold ml-1">Назва</label>
-                        <input id="inp-name" type="text" placeholder="Наприклад: Сумка Prada" class="glass-input w-full p-3 rounded-xl mt-1">
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-xs text-gray-400 uppercase font-bold ml-1">Ціна (грн)</label>
-                            <input id="inp-price" type="number" placeholder="0" class="glass-input w-full p-3 rounded-xl mt-1">
-                        </div>
-                        <div>
-                            <label class="text-xs text-gray-400 uppercase font-bold ml-1">Категорія</label>
-                            <select id="inp-category" class="glass-input w-full p-3 rounded-xl mt-1 cursor-pointer appearance-none">
-                                <option value="Одяг">👕 Одяг</option>
-                                <option value="Взуття">👟 Взуття</option>
-                                <option value="Аксесуари">👜 Аксесуари</option>
-                                <option value="Техніка">📱 Техніка</option>
-                                <option value="Інше">📦 Інше</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="text-xs text-gray-400 uppercase font-bold ml-1">Фото (Кожне з нового рядка!)</label>
-                        <div class="relative">
-                            <textarea id="inp-images" rows="4" placeholder="https://site.com/photo1.jpg&#10;https://site.com/photo2.jpg" class="glass-input w-full p-3 rounded-xl mt-1 pl-10 font-mono text-xs"></textarea>
-                            <i data-lucide="images" class="absolute left-3 top-4 w-4 h-4 text-gray-500"></i>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="text-xs text-gray-400 uppercase font-bold ml-1">Опис</label>
-                        <textarea id="inp-desc" rows="3" placeholder="Детальний опис..." class="glass-input w-full p-3 rounded-xl mt-1"></textarea>
-                    </div>
-
-                    <label class="flex items-center space-x-3 bg-white/5 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition border border-transparent hover:border-tg-accent/30">
-                        <input type="checkbox" id="inp-featured" class="w-5 h-5 accent-[#C2D8C4] rounded bg-gray-700 border-none">
-                        <div>
-                            <span class="text-sm text-white font-bold block">🔥 Топ пропозиція</span>
-                        </div>
-                    </label>
-
-                    <button id="addBtn" class="w-full py-4 rounded-xl btn-primary text-lg shadow-xl mt-4 flex justify-center items-center gap-2">
-                        <i data-lucide="save" class="w-5 h-5"></i> Опублікувати
-                    </button>
                 </div>
             </div>
+
+            <!-- Tab 2: Архів (History) -->
+            <div id="tab-history" class="tab-content space-y-3">
+                <div id="list-history" class="space-y-3 opacity-80 w-full">
+                    <!-- Сюди JS закине старі записи -->
+                </div>
+            </div>
+
         </div>
 
-        <div class="lg:col-span-7">
-            <div class="glass-panel rounded-3xl p-6 h-full min-h-[600px] flex flex-col">
-                <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-700/50">
-                    <div class="flex items-center">
-                        <div class="bg-gray-700/50 p-2 rounded-lg mr-3">
-                            <i data-lucide="package" class="text-gray-300 w-6 h-6"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-white">Склад</h2>
-                    </div>
-                    <span id="count-badge" class="bg-tg-accent text-black text-xs font-bold px-3 py-1 rounded-full">0</span>
-                </div>
+        <!-- Bottom Navigation (Tabs) -->
+        <div class="bg-white/95 backdrop-blur-lg border-t border-slate-200 p-2 flex justify-around items-center pb-safe z-20 fixed bottom-0 w-full shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+            
+            <button onclick="switchTab('new')" id="btn-tab-new" class="flex flex-col items-center text-brand p-2 w-1/2 rounded-xl transition-all">
+                <span class="material-icons-round text-2xl mb-1">mail</span>
+                <span class="text-[10px] font-bold uppercase tracking-wide">Вхідні</span>
+                <span id="badge-new" class="hidden absolute top-3 ml-6 bg-red-500 text-white text-[9px] px-1.5 rounded-full border-2 border-white shadow-sm">0</span>
+            </button>
+            
+            <div class="w-px h-8 bg-slate-200"></div>
 
-                <div id="product-list" class="space-y-3 overflow-y-auto flex-1 pr-2 max-h-[70vh]">
-                    <p class="text-gray-500 text-center mt-20">Завантаження...</p>
+            <button onclick="switchTab('history')" id="btn-tab-history" class="flex flex-col items-center text-slate-400 p-2 w-1/2 rounded-xl transition-all hover:bg-slate-50">
+                <span class="material-icons-round text-2xl mb-1">history</span>
+                <span class="text-[10px] font-bold uppercase tracking-wide">Архів</span>
+            </button>
+
+        </div>
+    </div>
+
+    <!-- === 3. DETAILS MODAL (Вікно деталей) === -->
+    <div id="details-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="absolute inset-0" onclick="closeDetails()"></div>
+
+        <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl modal-enter relative z-10 max-h-[90vh] overflow-y-auto">
+            <button onclick="closeDetails()" class="absolute top-4 right-4 p-2 bg-slate-50 rounded-full text-slate-400 hover:bg-slate-100 transition">
+                <span class="material-icons-round">close</span>
+            </button>
+            
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-brand text-white rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-3 shadow-lg shadow-blue-900/20" id="modal-avatar">?</div>
+                <h3 class="text-2xl font-bold text-slate-800" id="modal-name">Ім'я</h3>
+                <a href="#" id="modal-phone-link" class="text-sky-600 font-semibold text-lg mt-1 inline-flex items-center gap-1 hover:underline">
+                    <span class="material-icons-round">phone</span> <span id="modal-phone">...</span>
+                </a>
+                <div class="mt-3 flex justify-center gap-2" id="modal-status-container">
+                    <!-- Статус сюди -->
                 </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col items-center">
+                    <span class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Дата</span>
+                    <span class="text-lg font-bold text-brand" id="display-date">--.--</span>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col items-center">
+                    <span class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Час</span>
+                    <span class="text-2xl font-extrabold text-brand" id="display-time">--:--</span>
+                </div>
+            </div>
+
+            <!-- Edit Form -->
+            <div id="edit-form" class="hidden mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <h4 class="text-sm font-bold text-brand mb-3 flex items-center gap-2">
+                    <span class="material-icons-round text-sm">edit</span> Зміна запису
+                </h4>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs text-slate-500">Нова дата</label>
+                        <input type="date" id="edit-date" class="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-sky-500">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-500">Новий час</label>
+                        <select id="edit-time" class="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-sky-500">
+                        </select>
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button onclick="toggleEdit(false)" class="flex-1 py-3 rounded-xl border border-slate-300 text-slate-500 text-xs font-bold">СКАСУВАТИ</button>
+                        <button onclick="saveEdit()" class="flex-1 py-3 rounded-xl bg-brand text-white text-xs font-bold">ЗБЕРЕГТИ</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="space-y-3">
+                <button id="btn-edit-toggle" onclick="toggleEdit(true)" class="w-full py-3.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 flex items-center justify-center gap-2 transition">
+                    <span class="material-icons-round text-lg">edit_calendar</span> ПЕРЕНЕСТИ
+                </button>
+                
+                <button id="btn-confirm" onclick="askConfirm()" class="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-sm shadow-lg shadow-green-600/20 active:scale-95 transition-transform flex items-center justify-center gap-2">
+                    <span class="material-icons-round">check_circle</span> ПІДТВЕРДИТИ
+                </button>
+                
+                <button id="btn-delete" onclick="askDelete()" class="w-full text-red-400 py-2 text-xs font-bold hover:text-red-600 flex items-center justify-center gap-1">
+                    <span class="material-icons-round text-sm">delete</span> Видалити запис
+                </button>
+            </div>
+            
+            <input type="hidden" id="current-id">
+        </div>
+    </div>
+
+    <!-- === 4. CUSTOM ALERT/CONFIRM MODAL (Нові вікна замість alert) === -->
+    <div id="custom-modal" class="fixed inset-0 bg-slate-900/80 z-[60] hidden flex items-center justify-center backdrop-blur-sm p-6">
+        <div class="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl modal-enter text-center">
+            
+            <!-- Icon Area -->
+            <div id="c-icon-container" class="mb-4 flex justify-center"></div>
+            
+            <h3 id="c-title" class="text-xl font-bold text-brand mb-2">Заголовок</h3>
+            <p id="c-text" class="text-sm text-slate-500 mb-6">Текст повідомлення</p>
+            
+            <!-- Buttons -->
+            <div id="c-buttons" class="flex gap-3 justify-center">
+                <!-- Injected via JS -->
             </div>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+    <!-- === 5. SUCCESS ANIMATION OVERLAY === -->
+    <div id="success-overlay" class="fixed inset-0 bg-white z-[70] hidden flex flex-col items-center justify-center">
+        <div class="checkmark-circle">
+            <div class="background"></div>
+            <div class="checkmark draw"></div>
+            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <path class="check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-800 mt-6 fade-in">Успішно!</h2>
+    </div>
 
-        // 🔥 КОНФІГ (Твій) 🔥
+    <!-- LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, updateDoc, doc, orderBy, query, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
         const firebaseConfig = {
-            apiKey: "AIzaSyCKQbLkpj8Rz3qmY54sWl-a0uy27XdX38w",
-            authDomain: "mywebapp-15246.firebaseapp.com",
-            projectId: "mywebapp-15246",
-            storageBucket: "mywebapp-15246.firebasestorage.app",
-            messagingSenderId: "855671366648",
-            appId: "1:855671366648:web:f10adeeda588a868a62c0d"
+            apiKey: "AIzaSyBzjaoG4jyD1pjBH9Z0XhL6ZzAp_WT4Ep4",
+            authDomain: "happyfoot-lviv.firebaseapp.com",
+            projectId: "happyfoot-lviv",
+            storageBucket: "happyfoot-lviv.firebasestorage.app",
+            messagingSenderId: "825936740538",
+            appId: "1:825936740538:web:7aa5fa34a1a5f020f04283"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // 🔐 ЛОГІКА ПАРОЛЯ
-        const SECRET_PASS = "admin123"; // <--- ЗМІНИ ЦЕЙ ПАРОЛЬ НА СВІЙ
-
-        // Перевірка, чи вже входив користувач (щоб не вводити щоразу при оновленні)
-        if(sessionStorage.getItem('isAdmin') === 'true') {
-            unlockScreen();
-        }
-
-        document.getElementById('login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const input = document.getElementById('pass-input').value;
-            
-            if(input === SECRET_PASS) {
-                sessionStorage.setItem('isAdmin', 'true'); // Запам'ятати в сесії
-                unlockScreen();
-            } else {
-                const err = document.getElementById('error-msg');
-                err.classList.remove('hidden');
-                err.classList.add('animate-pulse');
-                document.getElementById('pass-input').value = '';
-            }
+        let currentAppointments = [];
+        const WORK_HOURS = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
+        
+        const timeSelect = document.getElementById('edit-time');
+        WORK_HOURS.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t; opt.text = t;
+            timeSelect.appendChild(opt);
         });
 
-        function unlockScreen() {
-            const lock = document.getElementById('lock-screen');
-            const content = document.getElementById('main-content');
+        /* --- CUSTOM MODALS SYSTEM --- */
+        function showModal(title, text, type = 'info', onConfirm = null) {
+            const modal = document.getElementById('custom-modal');
+            const iconCont = document.getElementById('c-icon-container');
+            const btns = document.getElementById('c-buttons');
             
-            lock.style.transition = "opacity 0.5s ease";
-            lock.style.opacity = "0";
-            setTimeout(() => lock.style.display = 'none', 500);
-            
-            document.body.style.overflow = "auto";
-            content.style.opacity = "1";
-            
-            // Завантажуємо іконки після відкриття
-            lucide.createIcons();
+            document.getElementById('c-title').innerText = title;
+            document.getElementById('c-text').innerText = text;
+
+            // Icons
+            if(type === 'danger') {
+                iconCont.innerHTML = `<div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-500"><span class="material-icons-round text-3xl">warning</span></div>`;
+            } else {
+                iconCont.innerHTML = `<div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-brand"><span class="material-icons-round text-3xl">info</span></div>`;
+            }
+
+            // Buttons
+            if (onConfirm) {
+                // Confirmation Mode
+                btns.innerHTML = `
+                    <button onclick="closeCustomModal()" class="flex-1 py-3 rounded-xl border border-slate-200 text-slate-500 font-bold text-sm">НІ</button>
+                    <button id="modal-confirm-btn" class="flex-1 py-3 rounded-xl ${type === 'danger' ? 'bg-red-500' : 'bg-brand'} text-white font-bold text-sm shadow-lg">ТАК</button>
+                `;
+                document.getElementById('modal-confirm-btn').onclick = () => {
+                    closeCustomModal();
+                    onConfirm();
+                };
+            } else {
+                // Alert Mode
+                btns.innerHTML = `<button onclick="closeCustomModal()" class="flex-1 py-3 rounded-xl bg-brand text-white font-bold text-sm shadow-lg">ЗРОЗУМІЛО</button>`;
+            }
+
+            modal.classList.remove('hidden');
         }
 
+        window.closeCustomModal = function() {
+            document.getElementById('custom-modal').classList.add('hidden');
+        }
 
-        // 🛍️ ЛОГІКА МАГАЗИНУ (Та сама)
-        document.getElementById('addBtn').addEventListener('click', async () => {
-            const btn = document.getElementById('addBtn');
-            const name = document.getElementById('inp-name').value;
-            const price = document.getElementById('inp-price').value;
-            
-            const rawImages = document.getElementById('inp-images').value;
-            const imagesArray = rawImages.split('\n').map(u => u.trim()).filter(u => u.length > 0);
-            
-            if(!name || !price) return alert("Введи дані!");
+        function playSuccess() {
+            const overlay = document.getElementById('success-overlay');
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 1800); // Показуємо 1.8 сек
+        }
 
-            btn.disabled = true;
-            btn.innerText = "Зберігаю...";
+        /* --- MAIN LOGIC REPLACEMENT --- */
+
+        window.askLogout = function() {
+            showModal('Вихід', 'Ви впевнені, що хочете вийти?', 'danger', () => location.reload());
+        }
+
+        window.askConfirm = function() {
+            const id = document.getElementById('current-id').value;
+            showModal('Підтвердження', 'Підтвердити запис та перенести в архів?', 'info', async () => {
+                try {
+                    await updateDoc(doc(db, "appointments", id), { status: "confirmed" });
+                    closeDetails();
+                    playSuccess();
+                } catch (e) { showModal('Помилка', e.message); }
+            });
+        }
+
+        window.askDelete = function() {
+            const id = document.getElementById('current-id').value;
+            showModal('Видалення', 'Це незворотно. Видалити запис?', 'danger', async () => {
+                try {
+                    await deleteDoc(doc(db, "appointments", id));
+                    closeDetails();
+                    playSuccess();
+                } catch (e) { showModal('Помилка', e.message); }
+            });
+        }
+        
+        // Original logic follows...
+
+        window.checkPin = function() {
+            if(document.getElementById('pin-input').value === '1111') {
+                document.getElementById('login-screen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('login-screen').classList.remove('active');
+                    document.getElementById('dashboard-screen').classList.add('active');
+                    startListening();
+                }, 300);
+            } else {
+                showModal('Помилка', 'Невірний PIN-код', 'danger');
+                document.getElementById('pin-input').value = '';
+            }
+        }
+
+        window.switchTab = function(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            
+            document.getElementById('btn-tab-new').className = "flex flex-col items-center text-slate-400 p-2 w-1/2 rounded-xl transition-all hover:bg-slate-50";
+            document.getElementById('btn-tab-history').className = "flex flex-col items-center text-slate-400 p-2 w-1/2 rounded-xl transition-all hover:bg-slate-50";
+            
+            if(tabName === 'new') {
+                document.getElementById('btn-tab-new').className = "flex flex-col items-center text-brand p-2 w-1/2 rounded-xl bg-blue-50/50 transition-all";
+            } else {
+                document.getElementById('btn-tab-history').className = "flex flex-col items-center text-brand p-2 w-1/2 rounded-xl bg-blue-50/50 transition-all";
+            }
+        }
+
+        function startListening() {
+            const listNew = document.getElementById('list-new');
+            const listHistory = document.getElementById('list-history');
+            const badgeNew = document.getElementById('badge-new');
+
+            const q = query(collection(db, "appointments"), orderBy("date", "asc"));
+
+            onSnapshot(q, (snapshot) => {
+                listNew.innerHTML = '';
+                listHistory.innerHTML = '';
+                currentAppointments = [];
+                
+                let newCount = 0;
+                const today = new Date().toISOString().split('T')[0];
+
+                if(snapshot.empty) {
+                    listNew.innerHTML = '<div class="text-center text-slate-400 mt-20">Список порожній</div>';
+                    return;
+                }
+
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const id = docSnap.id;
+                    const isNew = data.status === 'new';
+                    
+                    currentAppointments.push({ id, ...data });
+
+                    if(isNew) newCount++;
+
+                    const isHistory = data.date < today;
+
+                    const card = document.createElement('div');
+                    card.onclick = () => openDetails(id);
+                    
+                    let statusBorder = 'border-l-4 border-slate-300'; 
+                    if(isNew) statusBorder = 'border-l-[6px] border-[#04273b]';
+                    else if(data.status === 'confirmed') statusBorder = 'border-l-[6px] border-green-500';
+
+                    card.className = `relative bg-white p-4 rounded-xl shadow-sm ${statusBorder} mb-3 cursor-pointer active:scale-[0.98] transition-transform fade-in`;
+                    
+                    let statusLabel = '';
+                    if(isNew) statusLabel = '<span class="bg-sky-100 text-sky-700 text-[10px] font-bold px-2 py-1 rounded uppercase">НОВИЙ</span>';
+                    else if(data.status === 'confirmed') statusLabel = '<span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded uppercase">OK</span>';
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full ${isNew ? 'bg-brand text-white' : 'bg-slate-100 text-slate-400'} flex items-center justify-center font-bold text-lg">
+                                    ${data.name ? data.name[0].toUpperCase() : '?'}
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-base text-slate-800 leading-tight">${data.name}</h3>
+                                    <div class="text-xs text-slate-500 font-mono mt-0.5">📅 ${data.date} • ⏰ ${data.time || '--:--'}</div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end gap-1">
+                                ${statusLabel}
+                                <span class="material-icons-round text-slate-300 text-lg">chevron_right</span>
+                            </div>
+                        </div>
+                    `;
+
+                    if(isHistory) {
+                        listHistory.appendChild(card);
+                    } else {
+                        listNew.appendChild(card);
+                    }
+                });
+
+                if(newCount > 0) {
+                    badgeNew.innerText = newCount;
+                    badgeNew.classList.remove('hidden');
+                } else {
+                    badgeNew.classList.add('hidden');
+                }
+                
+                if(listNew.innerHTML === '') listNew.innerHTML = '<div class="text-center text-slate-400 mt-10">На сьогодні/завтра записів немає</div>';
+            });
+        }
+
+        window.openDetails = function(id) {
+            const data = currentAppointments.find(a => a.id === id);
+            if(!data) return;
+
+            document.getElementById('current-id').value = id;
+            document.getElementById('modal-name').innerText = data.name;
+            document.getElementById('modal-phone').innerText = data.phone;
+            document.getElementById('modal-phone-link').href = `tel:${data.phone}`;
+            document.getElementById('display-date').innerText = data.date || '---';
+            document.getElementById('display-time').innerText = data.time || '--:--';
+            document.getElementById('modal-avatar').innerText = data.name ? data.name[0].toUpperCase() : '?';
+
+            const sContainer = document.getElementById('modal-status-container');
+            const btnConfirm = document.getElementById('btn-confirm');
+            
+            if(data.status === 'new') {
+                sContainer.innerHTML = '<span class="bg-sky-100 text-sky-700 text-xs font-bold px-3 py-1 rounded-full uppercase">НОВИЙ ЗАПИС</span>';
+                btnConfirm.classList.remove('hidden');
+            } else if(data.status === 'confirmed') {
+                sContainer.innerHTML = '<span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full uppercase">ПІДТВЕРДЖЕНО ✅</span>';
+                btnConfirm.classList.add('hidden');
+            } else {
+                sContainer.innerHTML = '<span class="bg-gray-100 text-gray-500 text-xs font-bold px-3 py-1 rounded-full uppercase">АРХІВ</span>';
+                btnConfirm.classList.add('hidden');
+            }
+
+            toggleEdit(false);
+            document.getElementById('details-modal').classList.remove('hidden');
+        }
+
+        window.closeDetails = function() {
+            document.getElementById('details-modal').classList.add('hidden');
+        }
+
+        window.toggleEdit = function(show) {
+            const form = document.getElementById('edit-form');
+            const display = document.getElementById('btn-edit-toggle');
+            const confirmBtn = document.getElementById('btn-confirm');
+            
+            if(show) {
+                form.classList.remove('hidden');
+                display.classList.add('hidden');
+                confirmBtn.classList.add('hidden');
+                
+                const id = document.getElementById('current-id').value;
+                const data = currentAppointments.find(a => a.id === id);
+                if(data) {
+                    document.getElementById('edit-date').value = data.date;
+                    document.getElementById('edit-time').value = data.time;
+                }
+            } else {
+                form.classList.add('hidden');
+                display.classList.remove('hidden');
+                const id = document.getElementById('current-id').value;
+                const data = currentAppointments.find(a => a.id === id);
+                if(data && data.status === 'new') {
+                    confirmBtn.classList.remove('hidden');
+                }
+            }
+        }
+
+        window.saveEdit = async function() {
+            const id = document.getElementById('current-id').value;
+            const newDate = document.getElementById('edit-date').value;
+            const newTime = document.getElementById('edit-time').value;
+
+            if(!newDate || !newTime) return showModal('Помилка', 'Заповніть всі поля');
 
             try {
-                await addDoc(collection(db, "products"), {
-                    name: name,
-                    price: Number(price),
-                    category: document.getElementById('inp-category').value,
-                    images: imagesArray.length ? imagesArray : ["https://placehold.co/400?text=No+Img"],
-                    description: document.getElementById('inp-desc').value,
-                    featured: document.getElementById('inp-featured').checked,
-                    inStock: true,
-                    createdAt: new Date()
+                await updateDoc(doc(db, "appointments", id), {
+                    date: newDate,
+                    time: newTime
                 });
+                document.getElementById('display-date').innerText = newDate;
+                document.getElementById('display-time').innerText = newTime;
+                toggleEdit(false);
+                playSuccess();
+            } catch (e) { showModal('Помилка', e.message); }
+        }
 
-                // Очистка
-                document.getElementById('inp-name').value = '';
-                document.getElementById('inp-price').value = '';
-                document.getElementById('inp-images').value = '';
-                document.getElementById('inp-desc').value = '';
-                
-                btn.innerText = "Опублікувати";
-                btn.disabled = false;
-            } catch (e) {
-                alert("Помилка: " + e.message);
-                btn.disabled = false;
-            }
-        });
-
-        // Список
-        const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
-        onSnapshot(q, (snapshot) => {
-            const list = document.getElementById('product-list');
-            document.getElementById('count-badge').innerText = snapshot.size;
-            
-            if(snapshot.empty) {
-                list.innerHTML = '<p class="text-center text-gray-500">Пусто</p>';
-                return;
-            }
-
-            list.innerHTML = '';
-            snapshot.forEach((docSnap) => {
-                const p = docSnap.data();
-                const id = docSnap.id;
-                let img = "https://placehold.co/100?text=No+Img";
-                if(p.images && p.images.length) img = p.images[0];
-                else if(p.image) img = p.image;
-
-                const item = document.createElement('div');
-                item.className = "flex items-center justify-between bg-white/5 p-3 rounded-2xl border border-transparent hover:border-tg-accent/30 transition";
-                item.innerHTML = `
-                    <div class="flex items-center space-x-4 overflow-hidden">
-                        <img src="${img}" class="w-12 h-12 rounded-xl object-cover bg-gray-800">
-                        <div class="min-w-0">
-                            <h4 class="text-sm font-bold text-white truncate">${p.name}</h4>
-                            <p class="text-xs text-gray-400">${p.price} грн</p>
-                        </div>
-                    </div>
-                    <button class="delete-btn p-2 text-gray-500 hover:text-red-400" data-id="${id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
-                `;
-                list.appendChild(item);
-            });
-
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    if(confirm("Видалити?")) await deleteDoc(doc(db, "products", e.currentTarget.dataset.id));
-                });
-            });
-            lucide.createIcons();
-        });
-
-        lucide.createIcons();
+        const d = new Date();
+        document.getElementById('current-date').innerText = d.toLocaleDateString('uk-UA', {weekday:'long', day:'numeric', month:'long'});
     </script>
 </body>
 </html>
