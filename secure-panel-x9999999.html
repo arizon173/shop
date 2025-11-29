@@ -31,10 +31,6 @@
         @keyframes modalUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         
         .safe-bottom { padding-bottom: 110px; }
-        
-        /* Custom Inputs */
-        .glass-input { background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.05); }
-        .glass-input:focus { background: white; border-color: #04273b; }
     </style>
 </head>
 <body class="text-slate-800 h-[100dvh] overflow-hidden flex flex-col">
@@ -78,8 +74,14 @@
                     <h2 class="text-2xl font-extrabold text-brand">Записи</h2>
                     <span class="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full" id="appt-count">0 записів</span>
                 </div>
+                
+                <!-- Add Appointment Button -->
+                <button onclick="openAppointmentEditor()" class="w-full bg-brand text-white py-4 rounded-2xl font-bold shadow-lg shadow-brand/20 active:scale-[0.98] transition flex items-center justify-center gap-2">
+                    <span class="material-icons-round">add_circle</span> ДОДАТИ ЗАПИС ВРУЧНУ
+                </button>
+
                 <div id="list-active" class="space-y-3 w-full pb-10">
-                    <!-- Записи будуть тут -->
+                    <!-- Javascript Populated -->
                 </div>
             </div>
 
@@ -121,7 +123,7 @@
 
     <!-- === MODALS === -->
 
-    <!-- Appointment Details -->
+    <!-- 1. Appointment Details Modal (VIEW) -->
     <div id="details-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm transition-opacity">
         <div class="absolute inset-0" onclick="closeDetails()"></div>
         <div class="bg-white w-full sm:max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl modal-enter relative z-10">
@@ -146,7 +148,7 @@
                 </div>
             </div>
 
-            <div class="bg-sky-50 p-4 rounded-2xl mb-8 border border-sky-100">
+            <div class="bg-sky-50 p-4 rounded-2xl mb-6 border border-sky-100">
                 <div class="flex items-start gap-3">
                     <span class="material-icons-round text-sky-600 mt-1">spa</span>
                     <div>
@@ -163,15 +165,73 @@
                 <button id="btn-confirm" onclick="askConfirm()" class="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-base shadow-lg shadow-green-600/20 active:scale-[0.98] transition flex items-center justify-center gap-2">
                     <span class="material-icons-round">check_circle</span> ПІДТВЕРДИТИ ЗАПИС
                 </button>
-                <button onclick="askDelete()" class="w-full text-red-500 py-3 text-sm font-bold hover:bg-red-50 rounded-xl transition flex items-center justify-center gap-2">
-                    <span class="material-icons-round text-lg">delete</span> Скасувати / Видалити
-                </button>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="editCurrentAppointment()" class="w-full bg-slate-100 text-brand py-3 rounded-2xl font-bold text-sm hover:bg-slate-200 transition">
+                        ✎ РЕДАГУВАТИ
+                    </button>
+                    <button onclick="askDelete()" class="w-full bg-red-50 text-red-500 py-3 rounded-2xl text-sm font-bold hover:bg-red-100 transition">
+                        🗑 ВИДАЛИТИ
+                    </button>
+                </div>
             </div>
             <input type="hidden" id="current-id">
         </div>
     </div>
 
-    <!-- Team Editor -->
+    <!-- 2. Appointment EDITOR Modal (CREATE/EDIT) -->
+    <div id="appt-editor-modal" class="fixed inset-0 bg-slate-900/60 z-[60] hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="absolute inset-0" onclick="closeApptEditor()"></div>
+        <div class="bg-white w-full sm:max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl modal-enter relative z-10 max-h-[95vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 shrink-0">
+                <h3 class="text-xl font-extrabold text-brand" id="appt-modal-title">Новий запис</h3>
+                <button onclick="closeApptEditor()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-200"><span class="material-icons-round text-lg">close</span></button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto space-y-4 pr-1 pb-4">
+                <input type="hidden" id="edit-appt-id">
+                
+                <!-- Client Info -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
+                    <label class="text-xs font-bold text-slate-400 uppercase block">Клієнт</label>
+                    <input type="text" id="edit-client-name" placeholder="Ім'я клієнта" class="w-full bg-white p-3 rounded-xl font-bold border border-slate-200 focus:border-sky-500 outline-none">
+                    <input type="tel" id="edit-client-phone" placeholder="Телефон" class="w-full bg-white p-3 rounded-xl font-bold border border-slate-200 focus:border-sky-500 outline-none">
+                </div>
+
+                <!-- Service -->
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-400 uppercase ml-1">Послуга</label>
+                    <select id="edit-service-select" class="w-full bg-white p-3 rounded-xl font-bold border border-slate-200 focus:border-sky-500 outline-none text-brand">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
+                <!-- Specialist -->
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-400 uppercase ml-1">Спеціаліст</label>
+                    <select id="edit-spec-select" onchange="updateTimeSlots()" class="w-full bg-white p-3 rounded-xl font-bold border border-slate-200 focus:border-sky-500 outline-none text-brand">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
+                <!-- Date & Time -->
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-400 uppercase ml-1">Дата та Час</label>
+                    <input type="date" id="edit-date" onchange="updateTimeSlots()" class="w-full bg-white p-3 rounded-xl font-bold border border-slate-200 focus:border-sky-500 outline-none text-brand mb-2">
+                    
+                    <div id="slots-container" class="grid grid-cols-4 gap-2">
+                        <!-- Slots will appear here -->
+                    </div>
+                    <input type="hidden" id="edit-time">
+                </div>
+            </div>
+
+            <button onclick="saveAppointment()" class="w-full bg-brand text-white py-4 rounded-2xl font-bold shadow-xl shadow-brand/20 active:scale-[0.98] transition mt-2 shrink-0">
+                ЗБЕРЕГТИ ЗАПИС
+            </button>
+        </div>
+    </div>
+
+    <!-- 3. Team Editor Modal -->
     <div id="team-modal" class="fixed inset-0 bg-slate-900/60 z-[60] hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
         <div class="absolute inset-0" onclick="closeTeamModal()"></div>
         <div class="bg-white w-full sm:max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl modal-enter relative z-10 max-h-[90vh] overflow-y-auto">
@@ -192,9 +252,7 @@
                 
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <label class="text-xs font-bold text-slate-400 uppercase mb-3 block flex items-center gap-1"><span class="material-icons-round text-sm">schedule</span> Робочі години</label>
-                    <div class="grid grid-cols-4 gap-2" id="team-hours-grid">
-                        <!-- JS generated -->
-                    </div>
+                    <div class="grid grid-cols-4 gap-2" id="team-hours-grid"></div>
                 </div>
 
                 <div class="pt-2">
@@ -205,11 +263,10 @@
         </div>
     </div>
     
-    <!-- Service Editor -->
+    <!-- 4. Service Editor Modal -->
     <div id="service-editor-modal" class="fixed inset-0 bg-slate-900/60 z-[60] hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
         <div class="absolute inset-0" onclick="document.getElementById('service-editor-modal').classList.add('hidden')"></div>
         <div class="bg-white w-full sm:max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl modal-enter relative z-10 max-h-[95vh] flex flex-col">
-            <!-- Content populated by JS -->
             <div id="service-modal-content" class="flex flex-col h-full"></div>
         </div>
     </div>
@@ -217,7 +274,7 @@
     <!-- FIREBASE LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, updateDoc, doc, orderBy, query, deleteDoc, setDoc, addDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, updateDoc, doc, orderBy, query, deleteDoc, setDoc, addDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBzjaoG4jyD1pjBH9Z0XhL6ZzAp_WT4Ep4",
@@ -265,24 +322,20 @@
         window.switchTab = function(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tabName}`).classList.add('active');
-            
-            // Reset nav buttons
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.className = "nav-btn flex flex-col items-center p-2 w-1/3 rounded-xl transition-all text-slate-400 hover:bg-slate-50";
             });
-            // Active nav button
             const activeBtn = document.getElementById(`btn-tab-${tabName}`);
             activeBtn.className = "nav-btn flex flex-col items-center p-2 w-1/3 rounded-2xl transition-all text-brand bg-sky-50 shadow-sm transform scale-105";
         }
 
-        /* === APPOINTMENTS === */
+        /* === APPOINTMENTS LIST === */
         function setupAppointments() {
             onSnapshot(query(collection(db, "appointments"), orderBy("date", "asc")), (snapshot) => {
                 const list = document.getElementById('list-active');
                 list.innerHTML = ''; 
                 currentAppointments = [];
                 let count = 0;
-
                 const today = new Date().toISOString().split('T')[0];
 
                 snapshot.forEach((docSnap) => {
@@ -290,20 +343,16 @@
                     const id = docSnap.id;
                     currentAppointments.push({ id, ...data });
 
-                    // Show only future or today's appointments
                     if(data.date >= today) {
                         count++;
                         const el = document.createElement('div');
-                        
-                        // Styles based on status
                         const isConfirmed = data.status === 'confirmed';
                         const statusColor = isConfirmed ? 'border-green-500' : 'border-sky-500';
-                        const bgClass = isConfirmed ? 'bg-white' : 'bg-white';
                         const icon = isConfirmed 
                             ? `<div class="bg-green-100 text-green-700 p-1 rounded-full"><span class="material-icons-round text-sm">check</span></div>` 
                             : `<div class="bg-sky-100 text-sky-700 p-1 rounded-full"><span class="material-icons-round text-sm">priority_high</span></div>`;
 
-                        el.className = `p-4 rounded-2xl shadow-sm border border-slate-100 border-l-[6px] ${statusColor} ${bgClass} cursor-pointer active:scale-95 transition-transform relative overflow-hidden`;
+                        el.className = `p-4 rounded-2xl shadow-sm border border-slate-100 border-l-[6px] ${statusColor} bg-white cursor-pointer active:scale-95 transition-transform relative overflow-hidden`;
                         el.onclick = () => openDetails(id);
                         
                         el.innerHTML = `
@@ -330,20 +379,14 @@
                     }
                 });
                 
-                // Empty state
                 if(count === 0) {
-                    list.innerHTML = `
-                        <div class="flex flex-col items-center justify-center py-20 opacity-50">
-                            <span class="material-icons-round text-6xl text-slate-300 mb-2">event_busy</span>
-                            <div class="text-slate-400 font-bold">Немає активних записів</div>
-                        </div>
-                    `;
+                    list.innerHTML = `<div class="flex flex-col items-center justify-center py-20 opacity-50"><span class="material-icons-round text-6xl text-slate-300 mb-2">event_busy</span><div class="text-slate-400 font-bold">Немає активних записів</div></div>`;
                 }
-                
                 document.getElementById('appt-count').innerText = `${count} записів`;
             });
         }
 
+        /* === APPOINTMENT DETAILS & EDITING === */
         window.openDetails = (id) => {
             const data = currentAppointments.find(a => a.id === id);
             document.getElementById('current-id').value = id;
@@ -357,12 +400,7 @@
             document.getElementById('modal-specialist').innerText = data.specialistName || 'Будь-хто';
             
             const btnConfirm = document.getElementById('btn-confirm');
-            if(data.status === 'confirmed') {
-                btnConfirm.classList.add('hidden');
-            } else {
-                btnConfirm.classList.remove('hidden');
-            }
-
+            btnConfirm.classList.toggle('hidden', data.status === 'confirmed');
             document.getElementById('details-modal').classList.remove('hidden');
         }
 
@@ -378,9 +416,148 @@
              }
         }
 
+        /* === MANUAL APPOINTMENT CREATION/EDITING === */
+        window.openAppointmentEditor = (id = null) => {
+            document.getElementById('edit-appt-id').value = id || '';
+            document.getElementById('appt-modal-title').innerText = id ? "Редагування запису" : "Новий запис";
+            
+            // Populate Dropdowns
+            const serviceSelect = document.getElementById('edit-service-select');
+            serviceSelect.innerHTML = '<option value="">Оберіть послугу...</option>';
+            Object.values(servicesData).forEach(cat => {
+                const optGroup = document.createElement('optgroup');
+                optGroup.label = cat.title;
+                (cat.items || []).forEach(item => {
+                    optGroup.appendChild(new Option(item.name, item.name));
+                });
+                serviceSelect.appendChild(optGroup);
+            });
+
+            const specSelect = document.getElementById('edit-spec-select');
+            specSelect.innerHTML = '<option value="">Оберіть майстра...</option>';
+            specialistsData.forEach(s => {
+                const opt = new Option(s.name, s.id);
+                opt.dataset.hours = JSON.stringify(s.hours || []);
+                specSelect.appendChild(opt);
+            });
+
+            // Set Data if Edit Mode
+            if(id) {
+                const data = currentAppointments.find(a => a.id === id);
+                document.getElementById('edit-client-name').value = data.name;
+                document.getElementById('edit-client-phone').value = data.phone;
+                serviceSelect.value = data.serviceName;
+                specSelect.value = data.specialistId || '';
+                document.getElementById('edit-date').value = data.date;
+                document.getElementById('edit-time').value = data.time;
+                
+                // Hide Details modal if editing from there
+                document.getElementById('details-modal').classList.add('hidden');
+            } else {
+                // Reset for New
+                document.getElementById('edit-client-name').value = '';
+                document.getElementById('edit-client-phone').value = '';
+                serviceSelect.value = '';
+                specSelect.value = '';
+                document.getElementById('edit-date').value = new Date().toISOString().split('T')[0];
+                document.getElementById('edit-time').value = '';
+            }
+
+            updateTimeSlots();
+            document.getElementById('appt-editor-modal').classList.remove('hidden');
+        }
+
+        window.editCurrentAppointment = () => {
+            openAppointmentEditor(document.getElementById('current-id').value);
+        }
+
+        window.closeApptEditor = () => document.getElementById('appt-editor-modal').classList.add('hidden');
+
+        // Render time slots based on selected spec and date
+        window.updateTimeSlots = async () => {
+            const specId = document.getElementById('edit-spec-select').value;
+            const date = document.getElementById('edit-date').value;
+            const container = document.getElementById('slots-container');
+            const hiddenInput = document.getElementById('edit-time');
+            container.innerHTML = '';
+
+            if(!specId || !date) {
+                container.innerHTML = '<div class="col-span-4 text-xs text-slate-400 text-center">Оберіть майстра та дату</div>';
+                return;
+            }
+
+            // Find spec hours
+            const spec = specialistsData.find(s => s.id === specId);
+            const availableHours = spec?.hours || [];
+            
+            // Check busy slots in DB
+            const q = query(collection(db, "appointments"), where("date", "==", date));
+            const snap = await getDocs(q);
+            const busySlots = [];
+            const currentApptId = document.getElementById('edit-appt-id').value;
+            
+            snap.forEach(doc => {
+                const d = doc.data();
+                if(d.specialistId === specId && doc.id !== currentApptId) busySlots.push(d.time);
+            });
+
+            if(availableHours.length === 0) {
+                container.innerHTML = '<div class="col-span-4 text-xs text-red-400 text-center font-bold">Майстер не працює</div>';
+                return;
+            }
+
+            availableHours.forEach(time => {
+                const isBusy = busySlots.includes(time);
+                const btn = document.createElement('div');
+                const isSelected = hiddenInput.value === time;
+                
+                let bgClass = isBusy ? 'bg-slate-100 text-slate-300 cursor-not-allowed decoration-slice' : (isSelected ? 'bg-brand text-white' : 'bg-white text-brand border-brand');
+                if(!isBusy) bgClass += ' cursor-pointer hover:bg-brand hover:text-white';
+                
+                btn.className = `py-2 rounded-lg text-xs font-bold text-center border transition ${bgClass}`;
+                btn.innerText = time;
+                if(isBusy) btn.style.textDecoration = 'line-through';
+                
+                if(!isBusy) {
+                    btn.onclick = () => {
+                        document.querySelectorAll('#slots-container > div').forEach(d => {
+                             if(!d.style.textDecoration) d.className = 'py-2 rounded-lg text-xs font-bold text-center border border-brand text-brand bg-white cursor-pointer hover:bg-brand hover:text-white transition';
+                        });
+                        btn.className = 'py-2 rounded-lg text-xs font-bold text-center border border-brand bg-brand text-white cursor-pointer transition';
+                        hiddenInput.value = time;
+                    }
+                }
+                container.appendChild(btn);
+            });
+        }
+
+        window.saveAppointment = async () => {
+            const id = document.getElementById('edit-appt-id').value;
+            const name = document.getElementById('edit-client-name').value;
+            const phone = document.getElementById('edit-client-phone').value;
+            const serviceName = document.getElementById('edit-service-select').value;
+            const specSelect = document.getElementById('edit-spec-select');
+            const specialistId = specSelect.value;
+            const specialistName = specSelect.options[specSelect.selectedIndex].text;
+            const date = document.getElementById('edit-date').value;
+            const time = document.getElementById('edit-time').value;
+
+            if(!name || !phone || !serviceName || !specialistId || !date || !time) return alert('Заповніть всі поля!');
+
+            const payload = { name, phone, serviceName, specialistId, specialistName, date, time, status: 'confirmed' }; // Admin created = auto confirmed usually
+
+            try {
+                if(id) {
+                    await updateDoc(doc(db, "appointments", id), payload);
+                } else {
+                    await addDoc(collection(db, "appointments"), { ...payload, createdAt: new Date() });
+                }
+                closeApptEditor();
+            } catch(e) { alert('Помилка збереження'); console.error(e); }
+        }
+
+
         /* === TEAM MANAGEMENT === */
-        const ALL_HOURS = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
-        
         function renderHoursGrid() {
             const grid = document.getElementById('team-hours-grid');
             grid.innerHTML = '';
@@ -388,7 +565,6 @@
                 const label = document.createElement('label');
                 label.className = "flex items-center justify-center py-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 select-none text-[11px] font-bold transition-all";
                 label.innerHTML = `<input type="checkbox" value="${h}" class="hidden peer"> <span class="peer-checked:text-sky-600 peer-checked:scale-110 transition-transform block">${h}</span>`;
-                
                 label.querySelector('input').addEventListener('change', (e) => {
                     if(e.target.checked) label.classList.add('bg-sky-50', 'border-sky-300', 'shadow-sm');
                     else label.classList.remove('bg-sky-50', 'border-sky-300', 'shadow-sm');
@@ -429,7 +605,6 @@
             document.getElementById('team-id').value = '';
             document.getElementById('team-name').value = '';
             document.getElementById('team-role').value = '';
-            // Reset grid
             document.querySelectorAll('#team-hours-grid input').forEach(i => { 
                 i.checked = true; 
                 i.parentElement.classList.add('bg-sky-50', 'border-sky-300', 'shadow-sm');
@@ -461,19 +636,14 @@
             const name = document.getElementById('team-name').value;
             const role = document.getElementById('team-role').value;
             const hours = Array.from(document.querySelectorAll('#team-hours-grid input:checked')).map(i => i.value);
-
             if(!name) return alert('Введіть ім\'я');
-
-            if(id) {
-                await updateDoc(doc(db, "specialists", id), { name, role, hours });
-            } else {
-                await addDoc(collection(db, "specialists"), { name, role, hours });
-            }
+            if(id) await updateDoc(doc(db, "specialists", id), { name, role, hours });
+            else await addDoc(collection(db, "specialists"), { name, role, hours });
             closeTeamModal();
         }
 
         window.deleteTeamMember = async () => {
-            if(confirm('Звільнити працівника? (Його буде видалено з бази)')) {
+            if(confirm('Звільнити працівника?')) {
                 await deleteDoc(doc(db, "specialists", document.getElementById('team-id').value));
                 closeTeamModal();
             }
@@ -488,7 +658,6 @@
                 snap.forEach(d => {
                      const data = d.data();
                      servicesData[d.id] = data; 
-                     
                      const el = document.createElement('div');
                      el.className = "bg-white p-4 rounded-2xl shadow-sm border border-slate-100";
                      el.innerHTML = `
@@ -520,14 +689,12 @@
             const isNew = id === 'new-category';
             currentServiceId = isNew ? null : id;
             const data = isNew ? { title: '', icon: '✨', items: [] } : servicesData[id];
-
             const modalContent = document.getElementById('service-modal-content');
             modalContent.innerHTML = `
                 <div class="flex justify-between items-center mb-4 shrink-0">
                     <h3 class="text-xl font-extrabold text-brand">${isNew ? 'Нова категорія' : 'Редагування'}</h3>
                     <button onclick="document.getElementById('service-editor-modal').classList.add('hidden')" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-200"><span class="material-icons-round text-lg">close</span></button>
                 </div>
-                
                 <div class="flex-1 overflow-y-auto pr-1">
                     <div class="space-y-4 mb-6">
                         <div>
@@ -539,7 +706,6 @@
                             <input type="text" id="srv-icon" value="${data.icon}" placeholder="🦶" class="w-16 text-center bg-slate-50 border border-slate-200 rounded-xl p-3 text-xl outline-none focus:border-sky-500">
                         </div>
                     </div>
-                    
                     <div class="border-t border-slate-100 pt-4">
                         <label class="text-xs font-bold text-brand uppercase mb-3 block flex items-center gap-2">
                             <span class="material-icons-round text-sm">list</span> Список послуг
@@ -548,22 +714,14 @@
                         <button onclick="addServiceItemInput()" class="w-full py-3 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-xs font-bold hover:border-sky-300 hover:text-sky-500 transition">+ Додати послугу</button>
                     </div>
                 </div>
-
                 <div class="pt-4 mt-auto shrink-0 flex gap-3 border-t border-slate-50">
                     <button onclick="saveService()" class="flex-1 bg-brand text-white py-4 rounded-2xl font-bold shadow-xl shadow-brand/20 active:scale-[0.98] transition">ЗБЕРЕГТИ</button>
                     ${!isNew ? `<button onclick="deleteService()" class="w-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-100"><span class="material-icons-round">delete</span></button>` : ''}
                 </div>
             `;
-            
-            // Render items
             const listContainer = document.getElementById('srv-items-list');
-            (data.items || []).forEach(item => {
-                listContainer.appendChild(createItemRow(item.name, item.price, item.desc));
-            });
-            
-            // Add one empty if list is empty
+            (data.items || []).forEach(item => { listContainer.appendChild(createItemRow(item.name, item.price, item.desc)); });
             if((data.items || []).length === 0) addServiceItemInput();
-
             document.getElementById('service-editor-modal').classList.remove('hidden');
         };
 
@@ -581,32 +739,19 @@
             return div;
         }
 
-        window.addServiceItemInput = () => {
-            document.getElementById('srv-items-list').appendChild(createItemRow());
-        };
+        window.addServiceItemInput = () => document.getElementById('srv-items-list').appendChild(createItemRow());
 
         window.saveService = async () => {
             const title = document.getElementById('srv-title').value;
             const icon = document.getElementById('srv-icon').value;
             if(!title) return alert('Введіть назву категорії');
-
             const items = [];
             document.querySelectorAll('#srv-items-list > div').forEach(div => {
                 const n = div.querySelector('.item-name').value;
-                if(n) {
-                    items.push({
-                        name: n,
-                        price: div.querySelector('.item-price').value,
-                        desc: div.querySelector('.item-desc').value
-                    });
-                }
+                if(n) items.push({ name: n, price: div.querySelector('.item-price').value, desc: div.querySelector('.item-desc').value });
             });
-
-            if (currentServiceId) {
-                await setDoc(doc(db, "services", currentServiceId), { title, icon, items });
-            } else {
-                await addDoc(collection(db, "services"), { title, icon, items });
-            }
+            if (currentServiceId) await setDoc(doc(db, "services", currentServiceId), { title, icon, items });
+            else await addDoc(collection(db, "services"), { title, icon, items });
             document.getElementById('service-editor-modal').classList.add('hidden');
         };
 
