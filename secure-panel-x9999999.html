@@ -31,6 +31,9 @@
         @keyframes modalUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         
         .safe-bottom { padding-bottom: 110px; }
+        
+        /* Custom Scrollbar for hidden feel */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
 <body class="text-slate-800 h-[100dvh] overflow-hidden flex flex-col">
@@ -128,7 +131,6 @@
         <div class="absolute inset-0" onclick="closeDetails()"></div>
         <div class="bg-white w-full sm:max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl modal-enter relative z-10">
             <div class="w-12 h-1 bg-slate-200 rounded-full mx-auto mb-6"></div>
-            
             <div class="text-center mb-6">
                 <div class="w-20 h-20 bg-sky-100 text-brand rounded-full flex items-center justify-center text-3xl font-extrabold mx-auto mb-3 shadow-inner" id="modal-avatar">A</div>
                 <h3 class="text-2xl font-extrabold text-slate-800 leading-tight" id="modal-name">Ім'я</h3>
@@ -136,7 +138,6 @@
                     <span class="material-icons-round text-sm">phone</span> <span id="modal-phone">...</span>
                 </a>
             </div>
-            
             <div class="grid grid-cols-2 gap-3 mb-4">
                 <div class="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
                     <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Дата</span>
@@ -147,7 +148,6 @@
                     <div class="text-2xl font-black text-brand" id="display-time">--:--</div>
                 </div>
             </div>
-
             <div class="bg-sky-50 p-4 rounded-2xl mb-6 border border-sky-100">
                 <div class="flex items-start gap-3">
                     <span class="material-icons-round text-sky-600 mt-1">spa</span>
@@ -160,18 +160,13 @@
                     </div>
                 </div>
             </div>
-
             <div class="space-y-3">
                 <button id="btn-confirm" onclick="askConfirm()" class="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-base shadow-lg shadow-green-600/20 active:scale-[0.98] transition flex items-center justify-center gap-2">
                     <span class="material-icons-round">check_circle</span> ПІДТВЕРДИТИ ЗАПИС
                 </button>
                 <div class="grid grid-cols-2 gap-3">
-                    <button onclick="editCurrentAppointment()" class="w-full bg-slate-100 text-brand py-3 rounded-2xl font-bold text-sm hover:bg-slate-200 transition">
-                        ✎ РЕДАГУВАТИ
-                    </button>
-                    <button onclick="askDelete()" class="w-full bg-red-50 text-red-500 py-3 rounded-2xl text-sm font-bold hover:bg-red-100 transition">
-                        🗑 ВИДАЛИТИ
-                    </button>
+                    <button onclick="editCurrentAppointment()" class="w-full bg-slate-100 text-brand py-3 rounded-2xl font-bold text-sm hover:bg-slate-200 transition">✎ РЕДАГУВАТИ</button>
+                    <button onclick="askDelete()" class="w-full bg-red-50 text-red-500 py-3 rounded-2xl text-sm font-bold hover:bg-red-100 transition">🗑 ВИДАЛИТИ</button>
                 </div>
             </div>
             <input type="hidden" id="current-id">
@@ -197,20 +192,24 @@
                     <input type="tel" id="edit-client-phone" placeholder="Телефон" class="w-full bg-white p-3 rounded-xl font-bold border border-slate-200 focus:border-sky-500 outline-none">
                 </div>
 
-                <!-- Service -->
+                <!-- Service Selector Trigger -->
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-slate-400 uppercase ml-1">Послуга</label>
-                    <select id="edit-service-select" class="w-full bg-white p-3 rounded-xl font-bold border border-slate-200 focus:border-sky-500 outline-none text-brand">
-                        <!-- Populated by JS -->
-                    </select>
+                    <div onclick="openSelector('service')" id="edit-service-display" class="w-full bg-white p-4 rounded-xl font-bold border border-slate-200 text-brand flex justify-between items-center cursor-pointer active:bg-slate-50">
+                        <span class="truncate">Оберіть послугу...</span>
+                        <span class="material-icons-round text-slate-400">chevron_right</span>
+                    </div>
+                    <input type="hidden" id="edit-service-value">
                 </div>
 
-                <!-- Specialist -->
+                <!-- Specialist Selector Trigger -->
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-slate-400 uppercase ml-1">Спеціаліст</label>
-                    <select id="edit-spec-select" onchange="updateTimeSlots()" class="w-full bg-white p-3 rounded-xl font-bold border border-slate-200 focus:border-sky-500 outline-none text-brand">
-                        <!-- Populated by JS -->
-                    </select>
+                    <div onclick="openSelector('specialist')" id="edit-spec-display" class="w-full bg-white p-4 rounded-xl font-bold border border-slate-200 text-brand flex justify-between items-center cursor-pointer active:bg-slate-50">
+                        <span class="truncate">Оберіть майстра...</span>
+                        <span class="material-icons-round text-slate-400">chevron_right</span>
+                    </div>
+                    <input type="hidden" id="edit-spec-value">
                 </div>
 
                 <!-- Date & Time -->
@@ -218,16 +217,26 @@
                     <label class="text-xs font-bold text-slate-400 uppercase ml-1">Дата та Час</label>
                     <input type="date" id="edit-date" onchange="updateTimeSlots()" class="w-full bg-white p-3 rounded-xl font-bold border border-slate-200 focus:border-sky-500 outline-none text-brand mb-2">
                     
-                    <div id="slots-container" class="grid grid-cols-4 gap-2">
-                        <!-- Slots will appear here -->
-                    </div>
+                    <div id="slots-container" class="grid grid-cols-4 gap-2"></div>
                     <input type="hidden" id="edit-time">
                 </div>
             </div>
 
-            <button onclick="saveAppointment()" class="w-full bg-brand text-white py-4 rounded-2xl font-bold shadow-xl shadow-brand/20 active:scale-[0.98] transition mt-2 shrink-0">
-                ЗБЕРЕГТИ ЗАПИС
-            </button>
+            <button onclick="saveAppointment()" class="w-full bg-brand text-white py-4 rounded-2xl font-bold shadow-xl shadow-brand/20 active:scale-[0.98] transition mt-2 shrink-0">ЗБЕРЕГТИ ЗАПИС</button>
+        </div>
+    </div>
+
+    <!-- GENERIC SELECTOR MODAL (New Beautiful Picker) -->
+    <div id="selector-modal" class="fixed inset-0 bg-slate-900/60 z-[70] hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="absolute inset-0" onclick="document.getElementById('selector-modal').classList.add('hidden')"></div>
+        <div class="bg-white w-full sm:max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl modal-enter relative z-10 max-h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 shrink-0">
+                <h3 class="text-xl font-extrabold text-brand" id="selector-title">Вибір</h3>
+                <button onclick="document.getElementById('selector-modal').classList.add('hidden')" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-200"><span class="material-icons-round text-lg">close</span></button>
+            </div>
+            <div id="selector-content" class="flex-1 overflow-y-auto space-y-2">
+                <!-- Javascript will populate list here -->
+            </div>
         </div>
     </div>
 
@@ -267,7 +276,7 @@
     <div id="service-editor-modal" class="fixed inset-0 bg-slate-900/60 z-[60] hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
         <div class="absolute inset-0" onclick="document.getElementById('service-editor-modal').classList.add('hidden')"></div>
         <div class="bg-white w-full sm:max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl modal-enter relative z-10 max-h-[95vh] flex flex-col">
-            <div id="service-modal-content" class="flex flex-col h-full"></div>
+            <div id="service-modal-content" class="flex flex-col h-full overflow-hidden"></div>
         </div>
     </div>
 
@@ -310,24 +319,19 @@
             setupAppointments();
             setupTeam();
             setupServices();
-            
             const now = new Date();
             const options = { weekday: 'long', day: 'numeric', month: 'long' };
             let dateStr = now.toLocaleDateString('uk-UA', options);
             dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
             document.getElementById('current-date').innerText = dateStr;
-            
             renderHoursGrid();
         }
 
         window.switchTab = function(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tabName}`).classList.add('active');
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.className = "nav-btn flex flex-col items-center p-2 w-1/3 rounded-xl transition-all text-slate-400 hover:bg-slate-50";
-            });
-            const activeBtn = document.getElementById(`btn-tab-${tabName}`);
-            activeBtn.className = "nav-btn flex flex-col items-center p-2 w-1/3 rounded-2xl transition-all text-brand bg-sky-50 shadow-sm transform scale-105";
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.className = "nav-btn flex flex-col items-center p-2 w-1/3 rounded-xl transition-all text-slate-400 hover:bg-slate-50");
+            document.getElementById(`btn-tab-${tabName}`).className = "nav-btn flex flex-col items-center p-2 w-1/3 rounded-2xl transition-all text-brand bg-sky-50 shadow-sm transform scale-105";
         }
 
         /* === APPOINTMENTS LIST === */
@@ -380,9 +384,7 @@
                     }
                 });
                 
-                if(count === 0) {
-                    list.innerHTML = `<div class="flex flex-col items-center justify-center py-20 opacity-50"><span class="material-icons-round text-6xl text-slate-300 mb-2">event_busy</span><div class="text-slate-400 font-bold">Немає активних записів</div></div>`;
-                }
+                if(count === 0) list.innerHTML = `<div class="flex flex-col items-center justify-center py-20 opacity-50"><span class="material-icons-round text-6xl text-slate-300 mb-2">event_busy</span><div class="text-slate-400 font-bold">Немає активних записів</div></div>`;
                 document.getElementById('appt-count').innerText = `${count} записів`;
             });
         }
@@ -422,44 +424,28 @@
             document.getElementById('edit-appt-id').value = id || '';
             document.getElementById('appt-modal-title').innerText = id ? "Редагування запису" : "Новий запис";
             
-            // Populate Dropdowns
-            const serviceSelect = document.getElementById('edit-service-select');
-            serviceSelect.innerHTML = '<option value="">Оберіть послугу...</option>';
-            Object.values(servicesData).forEach(cat => {
-                const optGroup = document.createElement('optgroup');
-                optGroup.label = cat.title;
-                (cat.items || []).forEach(item => {
-                    optGroup.appendChild(new Option(item.name, item.name));
-                });
-                serviceSelect.appendChild(optGroup);
-            });
-
-            const specSelect = document.getElementById('edit-spec-select');
-            specSelect.innerHTML = '<option value="">Оберіть майстра...</option>';
-            specialistsData.forEach(s => {
-                const opt = new Option(s.name, s.id);
-                opt.dataset.hours = JSON.stringify(s.hours || []);
-                specSelect.appendChild(opt);
-            });
-
-            // Set Data if Edit Mode
             if(id) {
                 const data = currentAppointments.find(a => a.id === id);
                 document.getElementById('edit-client-name').value = data.name;
                 document.getElementById('edit-client-phone').value = data.phone;
-                serviceSelect.value = data.serviceName;
-                specSelect.value = data.specialistId || '';
+                
+                // Set Display Values
+                document.getElementById('edit-service-value').value = data.serviceName;
+                document.getElementById('edit-service-display').querySelector('span').innerText = data.serviceName;
+                
+                document.getElementById('edit-spec-value').value = data.specialistId || '';
+                document.getElementById('edit-spec-display').querySelector('span').innerText = data.specialistName || 'Оберіть майстра...';
+                
                 document.getElementById('edit-date').value = data.date;
                 document.getElementById('edit-time').value = data.time;
-                
-                // Hide Details modal if editing from there
                 document.getElementById('details-modal').classList.add('hidden');
             } else {
-                // Reset for New
                 document.getElementById('edit-client-name').value = '';
                 document.getElementById('edit-client-phone').value = '';
-                serviceSelect.value = '';
-                specSelect.value = '';
+                document.getElementById('edit-service-value').value = '';
+                document.getElementById('edit-service-display').querySelector('span').innerText = 'Оберіть послугу...';
+                document.getElementById('edit-spec-value').value = '';
+                document.getElementById('edit-spec-display').querySelector('span').innerText = 'Оберіть майстра...';
                 document.getElementById('edit-date').value = new Date().toISOString().split('T')[0];
                 document.getElementById('edit-time').value = '';
             }
@@ -468,30 +454,72 @@
             document.getElementById('appt-editor-modal').classList.remove('hidden');
         }
 
-        window.editCurrentAppointment = () => {
-            openAppointmentEditor(document.getElementById('current-id').value);
-        }
-
+        window.editCurrentAppointment = () => openAppointmentEditor(document.getElementById('current-id').value);
         window.closeApptEditor = () => document.getElementById('appt-editor-modal').classList.add('hidden');
 
-        // Render time slots based on selected spec and date
+        /* === NEW SELECTOR LOGIC === */
+        window.openSelector = (type) => {
+            const modal = document.getElementById('selector-modal');
+            const title = document.getElementById('selector-title');
+            const content = document.getElementById('selector-content');
+            content.innerHTML = '';
+
+            if (type === 'service') {
+                title.innerText = "Оберіть послугу";
+                Object.values(servicesData).forEach(cat => {
+                    const header = document.createElement('div');
+                    header.className = "text-xs font-bold text-slate-400 uppercase mt-4 mb-2 pl-2";
+                    header.innerText = cat.title;
+                    content.appendChild(header);
+                    
+                    (cat.items || []).forEach(item => {
+                        const btn = document.createElement('div');
+                        btn.className = "bg-slate-50 p-4 rounded-xl mb-2 flex justify-between items-center cursor-pointer active:bg-slate-100 active:scale-[0.99] transition";
+                        btn.innerHTML = `<span class="font-bold text-brand">${item.name}</span><span class="text-xs font-bold bg-white px-2 py-1 rounded text-slate-500">${item.price}</span>`;
+                        btn.onclick = () => {
+                            document.getElementById('edit-service-value').value = item.name;
+                            document.getElementById('edit-service-display').querySelector('span').innerText = item.name;
+                            modal.classList.add('hidden');
+                        };
+                        content.appendChild(btn);
+                    });
+                });
+            } else if (type === 'specialist') {
+                title.innerText = "Оберіть майстра";
+                specialistsData.forEach(s => {
+                    const btn = document.createElement('div');
+                    btn.className = "bg-slate-50 p-4 rounded-xl mb-2 flex items-center gap-3 cursor-pointer active:bg-slate-100 active:scale-[0.99] transition";
+                    btn.innerHTML = `
+                        <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center font-bold text-brand shadow-sm">${s.name[0]}</div>
+                        <div><div class="font-bold text-brand">${s.name}</div><div class="text-xs text-slate-500">${s.role}</div></div>
+                    `;
+                    btn.onclick = () => {
+                        document.getElementById('edit-spec-value').value = s.id;
+                        document.getElementById('edit-spec-display').querySelector('span').innerText = s.name;
+                        modal.classList.add('hidden');
+                        updateTimeSlots();
+                    };
+                    content.appendChild(btn);
+                });
+            }
+            modal.classList.remove('hidden');
+        };
+
         window.updateTimeSlots = async () => {
-            const specId = document.getElementById('edit-spec-select').value;
+            const specId = document.getElementById('edit-spec-value').value;
             const date = document.getElementById('edit-date').value;
             const container = document.getElementById('slots-container');
             const hiddenInput = document.getElementById('edit-time');
             container.innerHTML = '';
 
             if(!specId || !date) {
-                container.innerHTML = '<div class="col-span-4 text-xs text-slate-400 text-center">Оберіть майстра та дату</div>';
+                container.innerHTML = '<div class="col-span-4 text-xs text-slate-400 text-center py-4">Спочатку оберіть майстра та дату</div>';
                 return;
             }
 
-            // Find spec hours
             const spec = specialistsData.find(s => s.id === specId);
             const availableHours = spec?.hours || [];
             
-            // Check busy slots in DB
             const q = query(collection(db, "appointments"), where("date", "==", date));
             const snap = await getDocs(q);
             const busySlots = [];
@@ -503,7 +531,7 @@
             });
 
             if(availableHours.length === 0) {
-                container.innerHTML = '<div class="col-span-4 text-xs text-red-400 text-center font-bold">Майстер не працює</div>';
+                container.innerHTML = '<div class="col-span-4 text-xs text-red-400 text-center font-bold py-2">Цей майстер не має робочих годин</div>';
                 return;
             }
 
@@ -512,19 +540,19 @@
                 const btn = document.createElement('div');
                 const isSelected = hiddenInput.value === time;
                 
-                let bgClass = isBusy ? 'bg-slate-100 text-slate-300 cursor-not-allowed decoration-slice' : (isSelected ? 'bg-brand text-white' : 'bg-white text-brand border-brand');
-                if(!isBusy) bgClass += ' cursor-pointer hover:bg-brand hover:text-white';
+                let bgClass = isBusy ? 'bg-slate-100 text-slate-300 cursor-not-allowed decoration-slice' : (isSelected ? 'bg-brand text-white border-brand' : 'bg-white text-brand border-slate-200');
+                if(!isBusy) bgClass += ' cursor-pointer hover:border-brand hover:text-brand';
                 
-                btn.className = `py-2 rounded-lg text-xs font-bold text-center border transition ${bgClass}`;
+                btn.className = `py-3 rounded-xl text-xs font-bold text-center border transition ${bgClass}`;
                 btn.innerText = time;
                 if(isBusy) btn.style.textDecoration = 'line-through';
                 
                 if(!isBusy) {
                     btn.onclick = () => {
                         document.querySelectorAll('#slots-container > div').forEach(d => {
-                             if(!d.style.textDecoration) d.className = 'py-2 rounded-lg text-xs font-bold text-center border border-brand text-brand bg-white cursor-pointer hover:bg-brand hover:text-white transition';
+                             if(!d.style.textDecoration) d.className = 'py-3 rounded-xl text-xs font-bold text-center border border-slate-200 text-brand bg-white cursor-pointer hover:border-brand transition';
                         });
-                        btn.className = 'py-2 rounded-lg text-xs font-bold text-center border border-brand bg-brand text-white cursor-pointer transition';
+                        btn.className = 'py-3 rounded-xl text-xs font-bold text-center border border-brand bg-brand text-white cursor-pointer transition';
                         hiddenInput.value = time;
                     }
                 }
@@ -536,27 +564,22 @@
             const id = document.getElementById('edit-appt-id').value;
             const name = document.getElementById('edit-client-name').value;
             const phone = document.getElementById('edit-client-phone').value;
-            const serviceName = document.getElementById('edit-service-select').value;
-            const specSelect = document.getElementById('edit-spec-select');
-            const specialistId = specSelect.value;
-            const specialistName = specSelect.options[specSelect.selectedIndex].text;
+            const serviceName = document.getElementById('edit-service-value').value;
+            const specialistId = document.getElementById('edit-spec-value').value;
+            const specialistName = document.getElementById('edit-spec-display').innerText.replace('chevron_right','').trim();
             const date = document.getElementById('edit-date').value;
             const time = document.getElementById('edit-time').value;
 
             if(!name || !phone || !serviceName || !specialistId || !date || !time) return alert('Заповніть всі поля!');
 
-            const payload = { name, phone, serviceName, specialistId, specialistName, date, time, status: 'confirmed' }; // Admin created = auto confirmed usually
+            const payload = { name, phone, serviceName, specialistId, specialistName, date, time, status: 'confirmed' };
 
             try {
-                if(id) {
-                    await updateDoc(doc(db, "appointments", id), payload);
-                } else {
-                    await addDoc(collection(db, "appointments"), { ...payload, createdAt: new Date() });
-                }
+                if(id) await updateDoc(doc(db, "appointments", id), payload);
+                else await addDoc(collection(db, "appointments"), { ...payload, createdAt: new Date() });
                 closeApptEditor();
             } catch(e) { alert('Помилка збереження'); console.error(e); }
         }
-
 
         /* === TEAM MANAGEMENT === */
         function renderHoursGrid() {
@@ -696,7 +719,7 @@
                     <h3 class="text-xl font-extrabold text-brand">${isNew ? 'Нова категорія' : 'Редагування'}</h3>
                     <button onclick="document.getElementById('service-editor-modal').classList.add('hidden')" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-200"><span class="material-icons-round text-lg">close</span></button>
                 </div>
-                <div class="flex-1 overflow-y-auto min-h-0 pr-1">
+                <div class="flex-1 overflow-y-auto min-h-0 pr-1 pb-4">
                     <div class="space-y-4 mb-6">
                         <div>
                             <label class="text-xs font-bold text-slate-400 uppercase ml-1 mb-1 block">Назва категорії</label>
