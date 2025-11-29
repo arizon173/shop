@@ -30,6 +30,10 @@
         .modal-enter { animation: modalUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes modalUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         
+        /* Success Animation */
+        .scale-in { animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; opacity: 0; transform: scale(0.5); }
+        @keyframes scaleIn { to { opacity: 1; transform: scale(1); } }
+
         .safe-bottom { padding-bottom: 110px; }
         
         /* Custom Scrollbar for hidden feel */
@@ -126,6 +130,34 @@
 
     <!-- === MODALS === -->
 
+    <!-- GLOBAL CONFIRM MODAL -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 z-[90] hidden flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl modal-enter text-center">
+            <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                <span class="material-icons-round" style="font-size: 32px">warning</span>
+            </div>
+            <h3 class="text-xl font-extrabold text-slate-800 mb-2">Ви впевнені?</h3>
+            <p class="text-sm text-slate-500 mb-6 leading-relaxed" id="confirm-text">Цю дію неможливо буде скасувати.</p>
+            <div class="space-y-2">
+                <button id="confirm-yes-btn" class="w-full bg-red-500 text-white py-3 rounded-xl font-bold shadow-lg shadow-red-500/30 active:scale-95 transition">Так, видалити</button>
+                <button onclick="document.getElementById('confirm-modal').classList.add('hidden')" class="w-full py-3 rounded-xl font-bold text-slate-400 hover:bg-slate-50 transition">Скасувати</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GLOBAL SUCCESS MODAL -->
+    <div id="success-modal" class="fixed inset-0 bg-slate-900/60 z-[95] hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-xs rounded-3xl p-8 shadow-2xl modal-enter text-center">
+            <div class="scale-in">
+                <div class="w-20 h-20 bg-brand text-white rounded-full flex items-center justify-center text-4xl mx-auto mb-4 shadow-xl shadow-brand/30">
+                    <span class="material-icons-round" style="font-size: 40px">check</span>
+                </div>
+            </div>
+            <h3 class="text-2xl font-extrabold text-slate-800 mb-1">Готово!</h3>
+            <p class="text-sm text-slate-500 font-medium" id="success-text">Зміни успішно збережено</p>
+        </div>
+    </div>
+
     <!-- 1. Appointment Details Modal (VIEW) -->
     <div id="details-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm transition-opacity">
         <div class="absolute inset-0" onclick="closeDetails()"></div>
@@ -182,7 +214,7 @@
                 <button onclick="closeApptEditor()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-200"><span class="material-icons-round text-lg">close</span></button>
             </div>
             
-            <div class="flex-1 overflow-y-auto space-y-4 pr-1 pb-4">
+            <div class="flex-1 overflow-y-auto min-h-0 space-y-4 pr-1 pb-4">
                 <input type="hidden" id="edit-appt-id">
                 
                 <!-- Client Info -->
@@ -195,7 +227,7 @@
                 <!-- Service Selector Trigger -->
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-slate-400 uppercase ml-1">Послуга</label>
-                    <div onclick="openSelector('service')" id="edit-service-display" class="w-full bg-white p-4 rounded-xl font-bold border border-slate-200 text-brand flex justify-between items-center cursor-pointer active:bg-slate-50">
+                    <div onclick="openSelector('service')" id="edit-service-display" class="w-full bg-white p-4 rounded-xl font-bold border border-slate-200 text-brand flex justify-between items-center cursor-pointer active:bg-slate-50 shadow-sm">
                         <span class="truncate">Оберіть послугу...</span>
                         <span class="material-icons-round text-slate-400">chevron_right</span>
                     </div>
@@ -205,7 +237,7 @@
                 <!-- Specialist Selector Trigger -->
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-slate-400 uppercase ml-1">Спеціаліст</label>
-                    <div onclick="openSelector('specialist')" id="edit-spec-display" class="w-full bg-white p-4 rounded-xl font-bold border border-slate-200 text-brand flex justify-between items-center cursor-pointer active:bg-slate-50">
+                    <div onclick="openSelector('specialist')" id="edit-spec-display" class="w-full bg-white p-4 rounded-xl font-bold border border-slate-200 text-brand flex justify-between items-center cursor-pointer active:bg-slate-50 shadow-sm">
                         <span class="truncate">Оберіть майстра...</span>
                         <span class="material-icons-round text-slate-400">chevron_right</span>
                     </div>
@@ -234,7 +266,7 @@
                 <h3 class="text-xl font-extrabold text-brand" id="selector-title">Вибір</h3>
                 <button onclick="document.getElementById('selector-modal').classList.add('hidden')" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-200"><span class="material-icons-round text-lg">close</span></button>
             </div>
-            <div id="selector-content" class="flex-1 overflow-y-auto space-y-2">
+            <div id="selector-content" class="flex-1 overflow-y-auto space-y-2 min-h-0">
                 <!-- Javascript will populate list here -->
             </div>
         </div>
@@ -243,12 +275,12 @@
     <!-- 3. Team Editor Modal -->
     <div id="team-modal" class="fixed inset-0 bg-slate-900/60 z-[60] hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
         <div class="absolute inset-0" onclick="closeTeamModal()"></div>
-        <div class="bg-white w-full sm:max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl modal-enter relative z-10 max-h-[90vh] overflow-y-auto">
+        <div class="bg-white w-full sm:max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl modal-enter relative z-10 max-h-[90vh] flex flex-col">
              <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-extrabold text-brand" id="team-modal-title">Працівник</h3>
                 <button onclick="closeTeamModal()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-200"><span class="material-icons-round text-lg">close</span></button>
             </div>
-            <div class="space-y-4">
+            <div class="space-y-4 overflow-y-auto flex-1 min-h-0">
                 <input type="hidden" id="team-id">
                 <div>
                     <label class="text-xs font-bold text-slate-400 uppercase ml-1 mb-1 block">Ім'я</label>
@@ -263,11 +295,11 @@
                     <label class="text-xs font-bold text-slate-400 uppercase mb-3 block flex items-center gap-1"><span class="material-icons-round text-sm">schedule</span> Робочі години</label>
                     <div class="grid grid-cols-4 gap-2" id="team-hours-grid"></div>
                 </div>
+            </div>
 
-                <div class="pt-2">
-                    <button onclick="saveTeamMember()" class="w-full bg-brand text-white py-4 rounded-2xl font-bold shadow-xl shadow-brand/20 active:scale-[0.98] transition">ЗБЕРЕГТИ</button>
-                    <button id="btn-delete-team" onclick="deleteTeamMember()" class="w-full mt-2 text-red-400 py-3 text-xs font-bold hover:text-red-600 transition hidden">Видалити працівника</button>
-                </div>
+            <div class="pt-2 mt-4 shrink-0">
+                <button onclick="saveTeamMember()" class="w-full bg-brand text-white py-4 rounded-2xl font-bold shadow-xl shadow-brand/20 active:scale-[0.98] transition">ЗБЕРЕГТИ</button>
+                <button id="btn-delete-team" onclick="deleteTeamMember()" class="w-full mt-2 text-red-400 py-3 text-xs font-bold hover:text-red-600 transition hidden">Видалити працівника</button>
             </div>
         </div>
     </div>
@@ -325,6 +357,33 @@
             dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
             document.getElementById('current-date').innerText = dateStr;
             renderHoursGrid();
+        }
+
+        /* --- UTILS --- */
+        window.showSuccess = (text, callback) => {
+            const modal = document.getElementById('success-modal');
+            document.getElementById('success-text').innerText = text;
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if(callback) callback();
+            }, 1500);
+        }
+
+        window.showConfirm = (text, onConfirm) => {
+            const modal = document.getElementById('confirm-modal');
+            document.getElementById('confirm-text').innerText = text;
+            const yesBtn = document.getElementById('confirm-yes-btn');
+            
+            // Clean up old listeners
+            const newBtn = yesBtn.cloneNode(true);
+            yesBtn.parentNode.replaceChild(newBtn, yesBtn);
+            
+            newBtn.onclick = () => {
+                modal.classList.add('hidden');
+                onConfirm();
+            };
+            modal.classList.remove('hidden');
         }
 
         window.switchTab = function(tabName) {
@@ -408,15 +467,19 @@
         }
 
         window.closeDetails = () => document.getElementById('details-modal').classList.add('hidden');
-        window.askConfirm = async () => {
-             await updateDoc(doc(db, "appointments", document.getElementById('current-id').value), { status: 'confirmed' });
-             closeDetails();
-        }
-        window.askDelete = async () => {
-             if(confirm('Видалити цей запис безповоротно?')) {
-                 await deleteDoc(doc(db, "appointments", document.getElementById('current-id').value));
+        
+        window.askConfirm = () => {
+             showSuccess("Запис підтверджено", async () => {
+                 await updateDoc(doc(db, "appointments", document.getElementById('current-id').value), { status: 'confirmed' });
                  closeDetails();
-             }
+             });
+        }
+        
+        window.askDelete = () => {
+             showConfirm("Видалити цей запис безповоротно?", async () => {
+                 await deleteDoc(doc(db, "appointments", document.getElementById('current-id').value));
+                 showSuccess("Запис видалено", closeDetails);
+             });
         }
 
         /* === MANUAL APPOINTMENT CREATION/EDITING === */
@@ -577,7 +640,8 @@
             try {
                 if(id) await updateDoc(doc(db, "appointments", id), payload);
                 else await addDoc(collection(db, "appointments"), { ...payload, createdAt: new Date() });
-                closeApptEditor();
+                
+                showSuccess(id ? "Запис оновлено" : "Запис створено", closeApptEditor);
             } catch(e) { alert('Помилка збереження'); console.error(e); }
         }
 
@@ -661,16 +725,18 @@
             const role = document.getElementById('team-role').value;
             const hours = Array.from(document.querySelectorAll('#team-hours-grid input:checked')).map(i => i.value);
             if(!name) return alert('Введіть ім\'я');
+            
             if(id) await updateDoc(doc(db, "specialists", id), { name, role, hours });
             else await addDoc(collection(db, "specialists"), { name, role, hours });
-            closeTeamModal();
+            
+            showSuccess(id ? "Працівника оновлено" : "Працівника додано", closeTeamModal);
         }
 
         window.deleteTeamMember = async () => {
-            if(confirm('Звільнити працівника?')) {
+            showConfirm('Видалити працівника з бази?', async () => {
                 await deleteDoc(doc(db, "specialists", document.getElementById('team-id').value));
-                closeTeamModal();
-            }
+                showSuccess("Працівника видалено", closeTeamModal);
+            });
         }
 
         /* === SERVICES UPDATE === */
@@ -776,14 +842,15 @@
             });
             if (currentServiceId) await setDoc(doc(db, "services", currentServiceId), { title, icon, items });
             else await addDoc(collection(db, "services"), { title, icon, items });
-            document.getElementById('service-editor-modal').classList.add('hidden');
+            
+            showSuccess("Прайс оновлено", () => document.getElementById('service-editor-modal').classList.add('hidden'));
         };
 
         window.deleteService = async () => {
-            if(confirm('Видалити всю категорію послуг?')) {
+            showConfirm("Видалити всю категорію?", async () => {
                 await deleteDoc(doc(db, "services", currentServiceId));
-                document.getElementById('service-editor-modal').classList.add('hidden');
-            }
+                showSuccess("Категорію видалено", () => document.getElementById('service-editor-modal').classList.add('hidden'));
+            });
         };
     </script>
 </body>
