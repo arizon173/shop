@@ -27,7 +27,7 @@
         @keyframes modalUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .safe-bottom { padding-bottom: 100px; }
         .accordion-content { transition: max-height 0.3s ease-out, opacity 0.3s ease-out; max-height: 0; overflow: hidden; opacity: 0; }
-        .accordion-content.open { max-height: 2000px; opacity: 1; }
+        .accordion-content.open { max-height: 1000px; opacity: 1; }
     </style>
 </head>
 <body class="text-slate-800 h-screen overflow-hidden flex flex-col">
@@ -69,7 +69,7 @@
                 <div id="list-active" class="space-y-3 w-full"></div>
             </div>
 
-            <!-- TAB 2: TEAM -->
+            <!-- TAB 2: TEAM (NEW) -->
             <div id="tab-team" class="tab-content space-y-4">
                 <h2 class="text-lg font-bold text-brand px-1">Команда та Графік</h2>
                 <div id="team-list" class="space-y-3"></div>
@@ -78,21 +78,14 @@
                 </button>
             </div>
 
-            <!-- TAB 3: SERVICES (FULL EDITOR) -->
+            <!-- TAB 3: SERVICES -->
             <div id="tab-services" class="tab-content space-y-4">
                 <div class="flex justify-between items-center px-1">
                     <h2 class="text-lg font-bold text-brand">Редактор послуг</h2>
                 </div>
-                
-                <div id="services-list" class="space-y-3">
-                    <div class="text-center py-10 text-slate-400 text-sm">Завантаження послуг...</div>
-                </div>
-                <button onclick="openServiceModal('new-category')" class="w-full py-4 border-2 border-dashed border-slate-300 rounded-xl text-slate-400 font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-50 hover:border-slate-400 transition">
-                    <span class="material-icons-round">add_circle_outline</span> ДОДАТИ НОВУ КАТЕГОРІЮ
-                </button>
-                
-                <button onclick="askResetServices()" class="w-full text-[10px] font-bold text-slate-400 mt-6 uppercase tracking-widest text-center hover:text-red-400">
-                    ↺ Скинути до заводських налаштувань
+                <div id="services-list" class="space-y-3"></div>
+                <button onclick="openServiceModal('new-category')" class="w-full py-4 border-2 border-dashed border-slate-300 rounded-xl text-slate-400 font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-50 transition">
+                    <span class="material-icons-round">add_circle_outline</span> ДОДАТИ КАТЕГОРІЮ
                 </button>
             </div>
 
@@ -117,12 +110,10 @@
                 <a href="#" id="modal-phone-link" class="text-sky-600 font-bold text-lg inline-flex items-center gap-1"><span class="material-icons-round">phone</span> <span id="modal-phone">...</span></a>
             </div>
             
-            <div class="bg-sky-50 p-3 rounded-xl mb-4 text-center border border-sky-100">
-                <div class="text-xs text-sky-800 font-bold uppercase mb-1 opacity-60">Деталі запису</div>
-                <div class="font-bold text-brand text-lg leading-tight" id="modal-service">Послуга</div>
-                <div class="text-sm text-slate-600 flex justify-center items-center gap-1 mt-2 bg-white/50 py-1 px-3 rounded-lg inline-flex mx-auto">
-                    <span class="material-icons-round text-sm">person</span> <span id="modal-specialist" class="font-semibold">Спеціаліст</span>
-                </div>
+            <div class="bg-sky-50 p-3 rounded-xl mb-4 text-center">
+                <div class="text-xs text-sky-800 font-bold uppercase mb-1">Деталі запису</div>
+                <div class="font-bold text-brand text-lg" id="modal-service">Послуга</div>
+                <div class="text-sm text-slate-600 flex justify-center items-center gap-1 mt-1"><span class="material-icons-round text-sm">person</span> <span id="modal-specialist">Спеціаліст</span></div>
             </div>
             
             <div class="grid grid-cols-2 gap-3 mb-6">
@@ -131,7 +122,7 @@
             </div>
 
             <div class="space-y-2">
-                <button id="btn-confirm" onclick="askConfirm()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-green-600/20 active:scale-95 transition-transform">ПІДТВЕРДИТИ</button>
+                <button id="btn-confirm" onclick="askConfirm()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-green-600/20">ПІДТВЕРДИТИ</button>
                 <button onclick="askDelete()" class="w-full text-red-400 py-2 text-xs font-bold">Видалити запис</button>
             </div>
             <input type="hidden" id="current-id">
@@ -143,51 +134,33 @@
         <div class="absolute inset-0" onclick="closeTeamModal()"></div>
         <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl modal-enter relative z-10 max-h-[90vh] overflow-y-auto">
              <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-brand">Працівник</h3>
+                <h3 class="text-xl font-bold text-brand" id="team-modal-title">Працівник</h3>
                 <button onclick="closeTeamModal()" class="p-1 bg-slate-100 rounded-full text-slate-400"><span class="material-icons-round">close</span></button>
             </div>
             <div class="space-y-3">
                 <input type="hidden" id="team-id">
                 <input type="text" id="team-name" placeholder="Ім'я (напр. Ольга)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-sky-500 font-bold">
                 <input type="text" id="team-role" placeholder="Посада (напр. Подолог)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-sky-500">
+                
                 <div class="border-t border-slate-100 pt-3">
                     <label class="text-xs font-bold text-slate-400 uppercase mb-2 block">Робочі години:</label>
-                    <div class="grid grid-cols-4 gap-2" id="team-hours-grid"></div>
+                    <div class="grid grid-cols-4 gap-2" id="team-hours-grid">
+                        <!-- JS generated -->
+                    </div>
                 </div>
+
                 <button onclick="saveTeamMember()" class="w-full bg-brand text-white py-4 rounded-xl font-bold shadow-lg mt-2">ЗБЕРЕГТИ</button>
-                <button id="btn-delete-team" onclick="deleteTeamMember()" class="w-full text-red-500 py-2 text-xs font-bold hidden">Видалити</button>
+                <button id="btn-delete-team" onclick="deleteTeamMember()" class="w-full text-red-500 py-2 text-xs font-bold hidden">Звільнити/Видалити</button>
             </div>
         </div>
     </div>
-
-    <!-- === SERVICE EDITOR MODAL (POWERFUL) === -->
-    <div id="service-modal" class="fixed inset-0 bg-slate-900/60 z-[60] hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
-        <div class="absolute inset-0" onclick="closeServiceModal()"></div>
+    
+    <!-- === SERVICE EDITOR MODAL === -->
+    <div id="service-editor-modal" class="fixed inset-0 bg-slate-900/60 z-[60] hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="absolute inset-0" onclick="document.getElementById('service-editor-modal').classList.add('hidden')"></div>
         <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl modal-enter relative z-10">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-brand" id="service-modal-title">Редагування</h3>
-                <button onclick="closeServiceModal()" class="p-1 bg-slate-100 rounded-full text-slate-400"><span class="material-icons-round">close</span></button>
-            </div>
-            
-            <div class="space-y-3">
-                <!-- Inputs for Service Item -->
-                <div id="service-item-inputs" class="hidden space-y-3">
-                    <input type="text" id="inp-serv-name" placeholder="Назва послуги" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-sky-500 font-bold">
-                    <textarea id="inp-serv-desc" placeholder="Опис послуги (необов'язково)" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-sky-500 text-sm"></textarea>
-                    <input type="text" id="inp-serv-price" placeholder="Ціна (напр. 500 ₴)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-sky-500">
-                </div>
-                
-                <!-- Inputs for Category -->
-                <div id="service-cat-inputs" class="hidden space-y-3">
-                     <input type="text" id="inp-cat-title" placeholder="Назва категорії" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-sky-500 font-bold">
-                     <div class="text-xs font-bold text-slate-400 uppercase mt-2">Оберіть іконку:</div>
-                     <div class="grid grid-cols-5 gap-2" id="icon-picker"></div>
-                     <input type="hidden" id="inp-cat-icon">
-                </div>
-                
-                <button onclick="saveServiceData()" class="w-full bg-brand text-white py-4 rounded-xl font-bold shadow-lg mt-2">ЗБЕРЕГТИ</button>
-                <button id="btn-delete-service" onclick="deleteServiceData()" class="w-full text-red-500 py-2 text-xs font-bold hidden">Видалити</button>
-            </div>
+            <!-- Populated by JS -->
+            <div id="service-modal-content"></div>
         </div>
     </div>
 
@@ -208,10 +181,8 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- GLOBAL STATE ---
-        let servicesData = {}; 
-        let currentEditType = null; // 'item' or 'category'
-        let currentEditPath = null; // { catId, itemIndex }
+        /* --- STATE --- */
+        let servicesData = {};
         let currentAppointments = [];
         let specialistsData = [];
 
@@ -237,36 +208,47 @@
             document.getElementById(`btn-tab-${tabName}`).className = "nav-btn flex flex-col items-center p-2 w-1/3 rounded-xl transition-all text-brand bg-blue-50/50";
         }
 
-        // --- APPOINTMENTS ---
+        /* === APPOINTMENTS === */
         function setupAppointments() {
             onSnapshot(query(collection(db, "appointments"), orderBy("date", "asc")), (snapshot) => {
                 const list = document.getElementById('list-active');
-                list.innerHTML = ''; currentAppointments = [];
+                list.innerHTML = ''; 
+                currentAppointments = [];
+
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     const id = docSnap.id;
                     currentAppointments.push({ id, ...data });
+
                     if(data.date >= new Date().toISOString().split('T')[0]) {
                         const el = document.createElement('div');
                         let statusColor = data.status === 'confirmed' ? 'border-green-500' : 'border-[#04273b]';
                         let badge = data.status === 'confirmed' ? '<span class="bg-green-100 text-green-800 text-[10px] px-2 py-0.5 rounded font-bold">OK</span>' : '<span class="bg-sky-100 text-sky-800 text-[10px] px-2 py-0.5 rounded font-bold">НОВИЙ</span>';
+                        
                         el.className = `bg-white p-4 rounded-xl shadow-sm border-l-[6px] ${statusColor} mb-2 cursor-pointer active:scale-95 transition-transform`;
                         el.onclick = () => openDetails(id);
                         el.innerHTML = `
                             <div class="flex justify-between items-start mb-2">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 text-lg">${data.name[0]}</div>
-                                    <div><h4 class="font-bold text-slate-800 leading-none">${data.name}</h4><div class="text-xs text-slate-500 mt-1 font-mono">📅 ${data.date} • ${data.time}</div></div>
+                                    <div>
+                                        <h4 class="font-bold text-slate-800 leading-none">${data.name}</h4>
+                                        <div class="text-xs text-slate-500 mt-1 font-mono">📅 ${data.date} • ${data.time}</div>
+                                    </div>
                                 </div>
                                 ${badge}
                             </div>
-                            <div class="bg-slate-50 p-2 rounded-lg text-xs text-slate-600 flex justify-between items-center"><span class="font-bold text-brand">💅 ${data.serviceName || 'Послуга'}</span><span>👤 ${data.specialistName || 'Будь-хто'}</span></div>
+                            <div class="bg-slate-50 p-2 rounded-lg text-xs text-slate-600 flex justify-between items-center">
+                                <span class="font-bold text-brand">💅 ${data.serviceName || 'Послуга'}</span>
+                                <span>👤 ${data.specialistName || 'Будь-хто'}</span>
+                            </div>
                         `;
                         list.appendChild(el);
                     }
                 });
             });
         }
+
         window.openDetails = (id) => {
             const data = currentAppointments.find(a => a.id === id);
             document.getElementById('current-id').value = id;
@@ -277,196 +259,227 @@
             document.getElementById('display-time').innerText = data.time;
             document.getElementById('modal-service').innerText = data.serviceName || 'Не вказано';
             document.getElementById('modal-specialist').innerText = data.specialistName || 'Будь-хто';
+            
             const btnConfirm = document.getElementById('btn-confirm');
-            if(data.status === 'confirmed') btnConfirm.classList.add('hidden'); else btnConfirm.classList.remove('hidden');
+            if(data.status === 'confirmed') btnConfirm.classList.add('hidden');
+            else btnConfirm.classList.remove('hidden');
+
             document.getElementById('details-modal').classList.remove('hidden');
         }
-        window.closeDetails = () => document.getElementById('details-modal').classList.add('hidden');
-        window.askConfirm = async () => { await updateDoc(doc(db, "appointments", document.getElementById('current-id').value), { status: 'confirmed' }); closeDetails(); }
-        window.askDelete = async () => { if(confirm('Видалити?')) { await deleteDoc(doc(db, "appointments", document.getElementById('current-id').value)); closeDetails(); } }
 
-        // --- TEAM ---
+        window.closeDetails = () => document.getElementById('details-modal').classList.add('hidden');
+        window.askConfirm = async () => {
+             await updateDoc(doc(db, "appointments", document.getElementById('current-id').value), { status: 'confirmed' });
+             closeDetails();
+        }
+        window.askDelete = async () => {
+             if(confirm('Видалити?')) {
+                 await deleteDoc(doc(db, "appointments", document.getElementById('current-id').value));
+                 closeDetails();
+             }
+        }
+
+        /* === TEAM MANAGEMENT === */
         const ALL_HOURS = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
+        
         function renderHoursGrid() {
-            const grid = document.getElementById('team-hours-grid'); grid.innerHTML = '';
+            const grid = document.getElementById('team-hours-grid');
+            grid.innerHTML = '';
             ALL_HOURS.forEach(h => {
                 const label = document.createElement('label');
-                label.className = "flex items-center justify-center p-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 select-none text-xs font-bold transition-all";
+                label.className = "flex items-center justify-center p-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 select-none text-xs font-bold";
                 label.innerHTML = `<input type="checkbox" value="${h}" class="hidden peer"> <span class="peer-checked:text-sky-600">${h}</span>`;
-                label.querySelector('input').addEventListener('change', (e) => { if(e.target.checked) label.classList.add('bg-sky-50', 'border-sky-300'); else label.classList.remove('bg-sky-50', 'border-sky-300'); });
+                // Add visual state for checked
+                label.querySelector('input').addEventListener('change', (e) => {
+                    if(e.target.checked) label.classList.add('bg-sky-50', 'border-sky-300');
+                    else label.classList.remove('bg-sky-50', 'border-sky-300');
+                });
                 grid.appendChild(label);
             });
         }
+
         function setupTeam() {
             onSnapshot(collection(db, "specialists"), (snap) => {
-                const list = document.getElementById('team-list'); list.innerHTML = ''; specialistsData = [];
+                const list = document.getElementById('team-list');
+                list.innerHTML = '';
+                specialistsData = [];
                 snap.forEach(d => {
-                    const data = d.data(); specialistsData.push({id: d.id, ...data});
+                    const data = d.data();
+                    specialistsData.push({id: d.id, ...data});
                     const el = document.createElement('div');
                     el.className = "bg-white p-4 rounded-xl border border-slate-200 flex justify-between items-center";
                     el.innerHTML = `
-                        <div class="flex items-center gap-3"><div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center font-bold text-brand">${data.name[0]}</div>
-                        <div><div class="font-bold text-brand">${data.name}</div><div class="text-xs text-slate-500">${data.role}</div></div></div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center font-bold text-brand">${data.name[0]}</div>
+                            <div>
+                                <div class="font-bold text-brand">${data.name}</div>
+                                <div class="text-xs text-slate-500">${data.role}</div>
+                            </div>
+                        </div>
                         <button onclick="editTeam('${d.id}')" class="text-sky-600 font-bold text-xs bg-sky-50 px-3 py-1.5 rounded-lg">РЕД.</button>
                     `;
                     list.appendChild(el);
                 });
             });
         }
+
         window.openTeamModal = () => {
-            document.getElementById('team-id').value = ''; document.getElementById('team-name').value = ''; document.getElementById('team-role').value = '';
-            document.querySelectorAll('#team-hours-grid input').forEach(i => { i.checked = true; i.dispatchEvent(new Event('change')); });
-            document.getElementById('btn-delete-team').classList.add('hidden'); document.getElementById('team-modal').classList.remove('hidden');
+            document.getElementById('team-id').value = '';
+            document.getElementById('team-name').value = '';
+            document.getElementById('team-role').value = '';
+            document.querySelectorAll('#team-hours-grid input').forEach(i => { i.checked = true; i.dispatchEvent(new Event('change')); }); // Default all checked
+            document.getElementById('btn-delete-team').classList.add('hidden');
+            document.getElementById('team-modal').classList.remove('hidden');
         }
+
         window.editTeam = (id) => {
             const spec = specialistsData.find(s => s.id === id);
-            document.getElementById('team-id').value = id; document.getElementById('team-name').value = spec.name; document.getElementById('team-role').value = spec.role;
-            document.querySelectorAll('#team-hours-grid input').forEach(i => { i.checked = (spec.hours || []).includes(i.value); i.dispatchEvent(new Event('change')); });
-            document.getElementById('btn-delete-team').classList.remove('hidden'); document.getElementById('team-modal').classList.remove('hidden');
+            document.getElementById('team-id').value = id;
+            document.getElementById('team-name').value = spec.name;
+            document.getElementById('team-role').value = spec.role;
+            document.querySelectorAll('#team-hours-grid input').forEach(i => { 
+                i.checked = (spec.hours || []).includes(i.value);
+                i.dispatchEvent(new Event('change'));
+            });
+            document.getElementById('btn-delete-team').classList.remove('hidden');
+            document.getElementById('team-modal').classList.remove('hidden');
         }
+
         window.closeTeamModal = () => document.getElementById('team-modal').classList.add('hidden');
+
         window.saveTeamMember = async () => {
-            const id = document.getElementById('team-id').value; const name = document.getElementById('team-name').value; const role = document.getElementById('team-role').value;
+            const id = document.getElementById('team-id').value;
+            const name = document.getElementById('team-name').value;
+            const role = document.getElementById('team-role').value;
             const hours = Array.from(document.querySelectorAll('#team-hours-grid input:checked')).map(i => i.value);
+
             if(!name) return alert('Введіть ім\'я');
-            if(id) await updateDoc(doc(db, "specialists", id), { name, role, hours }); else await addDoc(collection(db, "specialists"), { name, role, hours });
+
+            if(id) {
+                await updateDoc(doc(db, "specialists", id), { name, role, hours });
+            } else {
+                await addDoc(collection(db, "specialists"), { name, role, hours });
+            }
             closeTeamModal();
         }
-        window.deleteTeamMember = async () => { if(confirm('Видалити працівника?')) { await deleteDoc(doc(db, "specialists", document.getElementById('team-id').value)); closeTeamModal(); } }
 
-        // --- SERVICES (FULL LOGIC) ---
+        window.deleteTeamMember = async () => {
+            if(confirm('Видалити працівника?')) {
+                await deleteDoc(doc(db, "specialists", document.getElementById('team-id').value));
+                closeTeamModal();
+            }
+        }
+
+        /* === SERVICES UPDATE === */
         function setupServices() {
-            onSnapshot(collection(db, "services"), (snapshot) => {
-                const list = document.getElementById('services-list');
-                list.innerHTML = ''; servicesData = {};
-
-                if(snapshot.empty) { list.innerHTML = `<div class="text-center py-8 text-slate-400">Список порожній.</div>`; return; }
-
-                snapshot.forEach(docSnap => {
-                    const id = docSnap.id;
-                    const data = docSnap.data();
-                    servicesData[id] = data;
-
-                    const catEl = document.createElement('div');
-                    catEl.className = "bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm";
-                    catEl.innerHTML = `
-                        <div class="flex items-center justify-between p-4 bg-slate-50 cursor-pointer select-none" onclick="toggleAccordion('${id}')">
-                            <div class="flex items-center gap-3"><span class="text-2xl">${data.icon || '✨'}</span><span class="font-bold text-brand">${data.title}</span></div>
-                            <div class="flex items-center gap-2">
-                                <button onclick="event.stopPropagation(); openServiceModal('edit-category', '${id}')" class="p-1.5 text-slate-400 hover:text-sky-500 bg-white rounded-lg border border-slate-200"><span class="material-icons-round text-sm">edit</span></button>
-                                <span class="material-icons-round text-slate-300 transform transition-transform duration-300" id="arrow-${id}">expand_more</span>
-                            </div>
+            const list = document.getElementById('services-list');
+            onSnapshot(collection(db, "services"), (snap) => {
+                list.innerHTML = '';
+                servicesData = {}; 
+                snap.forEach(d => {
+                     const data = d.data();
+                     servicesData[d.id] = data; 
+                     
+                     const el = document.createElement('div');
+                     el.className = "bg-white p-4 rounded-xl border border-slate-200 mb-2 flex justify-between items-center";
+                     el.innerHTML = `
+                        <div>
+                            <div class="font-bold text-brand flex items-center gap-2"><span class="text-xl">${data.icon||''}</span> ${data.title}</div>
+                            <div class="text-xs text-slate-400 mt-1">${(data.items||[]).length} послуг</div>
                         </div>
-                        <div id="acc-${id}" class="accordion-content bg-white">
-                            <div class="p-2 space-y-2">
-                                ${(data.items || []).map((item, idx) => `
-                                    <div class="flex justify-between items-center p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition">
-                                        <div><div class="font-bold text-sm text-slate-700">${item.name}</div><div class="text-xs text-slate-400 font-bold">${item.price}</div></div>
-                                        <button onclick="openServiceModal('edit-item', '${id}', ${idx})" class="text-sky-500 font-bold text-xs bg-sky-50 px-3 py-1.5 rounded-lg">РЕД.</button>
-                                    </div>
-                                `).join('')}
-                                <button onclick="openServiceModal('new-item', '${id}')" class="w-full py-3 text-xs font-bold text-slate-400 border border-dashed border-slate-200 rounded-xl hover:text-brand hover:border-brand transition">+ ДОДАТИ ПОСЛУГУ В ЦЮ КАТЕГОРІЮ</button>
-                            </div>
-                        </div>
-                    `;
-                    list.appendChild(catEl);
+                        <button onclick="openServiceModal('${d.id}')" class="text-sky-600 font-bold text-xs bg-sky-50 px-3 py-1.5 rounded-lg">РЕД.</button>
+                     `;
+                     list.appendChild(el);
                 });
             });
         }
-        window.toggleAccordion = function(id) {
-            const content = document.getElementById(`acc-${id}`);
-            const arrow = document.getElementById(`arrow-${id}`);
-            if(content.classList.contains('open')) { content.classList.remove('open'); arrow.style.transform = 'rotate(0deg)'; } 
-            else { content.classList.add('open'); arrow.style.transform = 'rotate(180deg)'; }
-        }
-        window.openServiceModal = function(type, catId = null, itemIndex = null) {
-            currentEditType = type; currentEditPath = { catId, itemIndex };
-            const modal = document.getElementById('service-modal');
-            const itemInputs = document.getElementById('service-item-inputs');
-            const catInputs = document.getElementById('service-cat-inputs');
-            const title = document.getElementById('service-modal-title');
-            const btnDel = document.getElementById('btn-delete-service');
 
-            itemInputs.classList.add('hidden'); catInputs.classList.add('hidden'); btnDel.classList.add('hidden');
+        /* === SERVICE EDITING LOGIC === */
+        let currentServiceId = null;
 
-            if(type === 'new-category') {
-                title.innerText = "Нова категорія"; catInputs.classList.remove('hidden');
-                document.getElementById('inp-cat-title').value = ''; renderIconPicker('🦶');
-            } else if (type === 'edit-category') {
-                title.innerText = "Редагування категорії"; catInputs.classList.remove('hidden'); btnDel.classList.remove('hidden');
-                const data = servicesData[catId];
-                document.getElementById('inp-cat-title').value = data.title; renderIconPicker(data.icon);
-            } else if (type === 'new-item') {
-                title.innerText = "Нова послуга"; itemInputs.classList.remove('hidden');
-                document.getElementById('inp-serv-name').value = ''; document.getElementById('inp-serv-desc').value = ''; document.getElementById('inp-serv-price').value = '';
-            } else if (type === 'edit-item') {
-                title.innerText = "Редагування послуги"; itemInputs.classList.remove('hidden'); btnDel.classList.remove('hidden');
-                const item = servicesData[catId].items[itemIndex];
-                document.getElementById('inp-serv-name').value = item.name; document.getElementById('inp-serv-desc').value = item.desc || ''; document.getElementById('inp-serv-price').value = item.price;
-            }
-            modal.classList.remove('hidden');
-        }
-        function renderIconPicker(current) {
-            const icons = ['🦶','💅','🔬','🤲','💆','🩹','✨','💊', '🌿', '💎'];
-            const container = document.getElementById('icon-picker'); container.innerHTML = '';
-            document.getElementById('inp-cat-icon').value = current;
-            icons.forEach(ic => {
-                const btn = document.createElement('div');
-                btn.className = `text-2xl p-2 rounded-lg text-center cursor-pointer border transition-colors ${ic === current ? 'bg-sky-100 border-sky-500' : 'bg-white border-slate-200 hover:bg-slate-50'}`;
-                btn.innerText = ic;
-                btn.onclick = () => { document.getElementById('inp-cat-icon').value = ic; renderIconPicker(ic); };
-                container.appendChild(btn);
+        window.openServiceModal = (id) => {
+            const isNew = id === 'new-category';
+            currentServiceId = isNew ? null : id;
+            const data = isNew ? { title: '', icon: '✨', items: [] } : servicesData[id];
+
+            const modalContent = document.getElementById('service-modal-content');
+            modalContent.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-brand">${isNew ? 'Нова категорія' : 'Редагування'}</h3>
+                    <button onclick="document.getElementById('service-editor-modal').classList.add('hidden')" class="p-1 bg-slate-100 rounded-full text-slate-400"><span class="material-icons-round">close</span></button>
+                </div>
+                <div class="space-y-3 max-h-[70vh] overflow-y-auto">
+                    <input type="text" id="srv-title" value="${data.title}" placeholder="Назва категорії (напр. Масаж)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold">
+                    <input type="text" id="srv-icon" value="${data.icon}" placeholder="Іконка (emoji)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3">
+                    
+                    <div class="border-t border-slate-100 pt-3">
+                        <label class="text-xs font-bold text-slate-400 uppercase mb-2 block">Список послуг:</label>
+                        <div id="srv-items-list" class="space-y-2"></div>
+                        <button onclick="addServiceItemInput()" class="w-full py-2 mt-2 border border-dashed border-slate-300 rounded-lg text-slate-400 text-xs font-bold">+ Додати послугу</button>
+                    </div>
+
+                    <div class="pt-2 flex gap-2">
+                        <button onclick="saveService()" class="flex-1 bg-brand text-white py-3 rounded-xl font-bold shadow-lg">ЗБЕРЕГТИ</button>
+                        ${!isNew ? `<button onclick="deleteService()" class="p-3 text-red-500 bg-red-50 rounded-xl"><span class="material-icons-round">delete</span></button>` : ''}
+                    </div>
+                </div>
+            `;
+            
+            // Render items
+            const listContainer = document.getElementById('srv-items-list');
+            (data.items || []).forEach(item => {
+                listContainer.appendChild(createItemRow(item.name, item.price, item.desc));
             });
+
+            document.getElementById('service-editor-modal').classList.remove('hidden');
+        };
+
+        function createItemRow(name='', price='', desc='') {
+            const div = document.createElement('div');
+            div.className = "bg-slate-50 p-2 rounded-lg border border-slate-200 space-y-2 relative group";
+            div.innerHTML = `
+                <div class="flex gap-2">
+                    <input type="text" class="item-name w-2/3 bg-white p-2 rounded text-sm font-bold border border-slate-100" placeholder="Назва" value="${name}">
+                    <input type="text" class="item-price w-1/3 bg-white p-2 rounded text-sm text-right border border-slate-100" placeholder="Ціна" value="${price}">
+                </div>
+                <input type="text" class="item-desc w-full bg-white p-2 rounded text-xs text-slate-500 border border-slate-100" placeholder="Опис" value="${desc}">
+                <button onclick="this.parentElement.remove()" class="absolute -top-1 -right-1 bg-red-100 text-red-500 rounded-full w-5 h-5 flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition">✕</button>
+            `;
+            return div;
         }
-        window.closeServiceModal = function() { document.getElementById('service-modal').classList.add('hidden'); }
-        window.saveServiceData = async function() {
-            try {
-                if(currentEditType === 'new-category') {
-                    const title = document.getElementById('inp-cat-title').value; const icon = document.getElementById('inp-cat-icon').value;
-                    if(!title) return alert('Введіть назву');
-                    await setDoc(doc(db, "services", 'cat_' + Date.now()), { title, icon, items: [] });
-                } else if (currentEditType === 'edit-category') {
-                    const title = document.getElementById('inp-cat-title').value; const icon = document.getElementById('inp-cat-icon').value;
-                    await updateDoc(doc(db, "services", currentEditPath.catId), { title, icon });
-                } else if (currentEditType === 'new-item') {
-                    const name = document.getElementById('inp-serv-name').value; const desc = document.getElementById('inp-serv-desc').value; const price = document.getElementById('inp-serv-price').value;
-                    if(!name || !price) return alert('Заповніть назву та ціну');
-                    const newItems = [...(servicesData[currentEditPath.catId].items || []), { name, desc, price }];
-                    await updateDoc(doc(db, "services", currentEditPath.catId), { items: newItems });
-                } else if (currentEditType === 'edit-item') {
-                    const name = document.getElementById('inp-serv-name').value; const desc = document.getElementById('inp-serv-desc').value; const price = document.getElementById('inp-serv-price').value;
-                    const newItems = [...servicesData[currentEditPath.catId].items];
-                    newItems[currentEditPath.itemIndex] = { name, desc, price };
-                    await updateDoc(doc(db, "services", currentEditPath.catId), { items: newItems });
-                }
-                closeServiceModal();
-            } catch (e) { alert("Помилка: " + e.message); }
-        }
-        window.deleteServiceData = async function() {
-            if(!confirm("Ви впевнені?")) return;
-            try {
-                if(currentEditType === 'edit-category') {
-                    await deleteDoc(doc(db, "services", currentEditPath.catId));
-                } else if (currentEditType === 'edit-item') {
-                    const newItems = servicesData[currentEditPath.catId].items.filter((_, i) => i !== currentEditPath.itemIndex);
-                    await updateDoc(doc(db, "services", currentEditPath.catId), { items: newItems });
-                }
-                closeServiceModal();
-            } catch (e) { alert("Помилка: " + e.message); }
-        }
-        
-        window.askResetServices = async function() {
-            const DEFAULT_SERVICES = {
-              'podo': { title: 'Подологія', icon: '🦶', items: [ { name: 'Базовий догляд', desc: 'Апаратний медичний педикюр', price: '1100 ₴' }, { name: 'Корекція врослого нігтя', desc: 'Безопераційна корекція', price: '900 ₴' } ] },
-              'manicure': { title: 'Манікюр', icon: '💅', items: [ { name: 'Апаратний манікюр', desc: 'Делікатна обробка кутикули', price: '600 ₴' } ] }
-            };
-            if(confirm("УВАГА: Це видалить всі поточні послуги і відновить стандартні. Продовжити?")) {
-                // Warning: This only adds default ones, doesn't delete existing old IDs that are not in default list unless we specifically logic for it.
-                // For simplicity/safety, we just overwrite known keys. Ideally, manually delete old docs first if needed.
-                for (const [key, val] of Object.entries(DEFAULT_SERVICES)) { await setDoc(doc(db, "services", key), val); }
-                alert("Стандартні послуги відновлено!");
+
+        window.addServiceItemInput = () => {
+            document.getElementById('srv-items-list').appendChild(createItemRow());
+        };
+
+        window.saveService = async () => {
+            const title = document.getElementById('srv-title').value;
+            const icon = document.getElementById('srv-icon').value;
+            if(!title) return alert('Введіть назву категорії');
+
+            const items = [];
+            document.querySelectorAll('#srv-items-list > div').forEach(div => {
+                items.push({
+                    name: div.querySelector('.item-name').value,
+                    price: div.querySelector('.item-price').value,
+                    desc: div.querySelector('.item-desc').value
+                });
+            });
+
+            if (currentServiceId) {
+                await setDoc(doc(db, "services", currentServiceId), { title, icon, items });
+            } else {
+                await addDoc(collection(db, "services"), { title, icon, items });
             }
-        }
+            document.getElementById('service-editor-modal').classList.add('hidden');
+        };
+
+        window.deleteService = async () => {
+            if(confirm('Видалити всю категорію послуг?')) {
+                await deleteDoc(doc(db, "services", currentServiceId));
+                document.getElementById('service-editor-modal').classList.add('hidden');
+            }
+        };
     </script>
 </body>
 </html>
