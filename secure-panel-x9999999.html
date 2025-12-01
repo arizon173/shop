@@ -11,6 +11,10 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -34,8 +38,6 @@
         @keyframes scaleIn { to { opacity: 1; transform: scale(1); } }
 
         .safe-bottom { padding-bottom: 110px; }
-
-        /* Custom Scrollbar for hidden feel */
         ::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
@@ -53,11 +55,11 @@
                        class="w-full bg-slate-900/50 text-white text-center text-4xl tracking-[0.5em] p-4 rounded-2xl border border-white/10 mb-6 focus:border-sky-400 focus:ring-4 outline-none transition-all placeholder-white/10">
                 <button onclick="checkPin()" class="w-full bg-white text-brand font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-transform hover:shadow-sky-500/20">УВІЙТИ</button>
             </div>
+            <div id="login-error" class="mt-4 text-red-400 text-xs font-bold hidden">Невірний PIN або відсутній інтернет</div>
         </div>
     </div>
 
     <div id="dashboard-screen" class="screen h-full flex flex-col relative bg-[#F8FAFC]">
-
         <header class="bg-white/80 backdrop-blur-md px-6 py-4 shadow-sm flex justify-between items-center z-20 border-b border-slate-100 shrink-0 sticky top-0">
             <div>
                 <h1 class="font-extrabold text-xl text-brand flex items-center gap-2">HappyFoot <span class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></span></h1>
@@ -69,26 +71,20 @@
         </header>
 
         <div class="flex-1 overflow-y-auto p-5 safe-bottom scroll-smooth w-full relative">
-
+            
             <div id="tab-active" class="tab-content active space-y-4">
                 <div class="flex justify-between items-end px-1">
                     <h2 class="text-2xl font-extrabold text-brand">Записи</h2>
-                    <span class="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full" id="appt-count">0 записів</span>
+                    <span class="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full" id="appt-count">Завантаження...</span>
                 </div>
-
                 <button onclick="openAppointmentEditor()" class="w-full bg-brand text-white py-4 rounded-2xl font-bold shadow-lg shadow-brand/20 active:scale-[0.98] transition flex items-center justify-center gap-2">
                     <span class="material-icons-round">add_circle</span> ДОДАТИ ЗАПИС ВРУЧНУ
                 </button>
-
-                <div id="list-active" class="space-y-3 w-full pb-10">
-                    </div>
+                <div id="list-active" class="space-y-3 w-full pb-10"></div>
             </div>
 
             <div id="tab-team" class="tab-content space-y-5">
-                <div class="px-1">
-                    <h2 class="text-2xl font-extrabold text-brand">Команда</h2>
-                    <p class="text-sm text-slate-500">Налаштування графіку роботи</p>
-                </div>
+                <div class="px-1"><h2 class="text-2xl font-extrabold text-brand">Команда</h2><p class="text-sm text-slate-500">Графік роботи</p></div>
                 <div id="team-list" class="space-y-3"></div>
                 <button onclick="openTeamModal()" class="w-full py-4 border-2 border-dashed border-slate-300 rounded-2xl text-slate-400 font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-50 hover:border-sky-300 hover:text-sky-500 transition active:scale-[0.98]">
                     <span class="material-icons-round">person_add</span> ДОДАТИ ПРАЦІВНИКА
@@ -96,18 +92,12 @@
             </div>
 
             <div id="tab-services" class="tab-content space-y-5">
-                <div class="flex justify-between items-center px-1">
-                    <div>
-                        <h2 class="text-2xl font-extrabold text-brand">Послуги</h2>
-                        <p class="text-sm text-slate-500">Редагування прайсу</p>
-                    </div>
-                </div>
+                <div class="px-1"><h2 class="text-2xl font-extrabold text-brand">Послуги</h2><p class="text-sm text-slate-500">Редагування прайсу</p></div>
                 <div id="services-list" class="space-y-4"></div>
                 <button onclick="openServiceModal('new-category')" class="w-full py-4 border-2 border-dashed border-slate-300 rounded-2xl text-slate-400 font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-50 hover:border-sky-300 hover:text-sky-500 transition active:scale-[0.98]">
-                    <span class="material-icons-round">add_circle_outline</span> ДОДАТИ НОВУ КАТЕГОРІЮ
+                    <span class="material-icons-round">add_circle_outline</span> ДОДАТИ КАТЕГОРІЮ
                 </button>
             </div>
-
         </div>
 
         <div class="bg-white/90 backdrop-blur-xl border-t border-slate-200 p-3 flex justify-around items-center pb-safe z-30 fixed bottom-0 w-full shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-3xl">
@@ -119,11 +109,9 @@
 
     <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 z-[90] hidden flex items-center justify-center backdrop-blur-sm p-4">
         <div class="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl modal-enter text-center">
-            <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
-                <span class="material-icons-round" style="font-size: 32px">warning</span>
-            </div>
+            <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><span class="material-icons-round" style="font-size: 32px">warning</span></div>
             <h3 class="text-xl font-extrabold text-slate-800 mb-2">Ви впевнені?</h3>
-            <p class="text-sm text-slate-500 mb-6 leading-relaxed" id="confirm-text">Цю дію неможливо буде скасувати.</p>
+            <p class="text-sm text-slate-500 mb-6 leading-relaxed" id="confirm-text">Дію неможливо скасувати.</p>
             <div class="space-y-2">
                 <button id="confirm-yes-btn" class="w-full bg-red-500 text-white py-3 rounded-xl font-bold shadow-lg shadow-red-500/30 active:scale-95 transition">Так, видалити</button>
                 <button onclick="document.getElementById('confirm-modal').classList.add('hidden')" class="w-full py-3 rounded-xl font-bold text-slate-400 hover:bg-slate-50 transition">Скасувати</button>
@@ -133,56 +121,33 @@
 
     <div id="success-modal" class="fixed inset-0 bg-slate-900/60 z-[95] hidden flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white w-full max-w-xs rounded-3xl p-8 shadow-2xl modal-enter text-center">
-            <div class="scale-in">
-                <div class="w-20 h-20 bg-brand text-white rounded-full flex items-center justify-center text-4xl mx-auto mb-4 shadow-xl shadow-brand/30">
-                    <span class="material-icons-round" style="font-size: 40px">check</span>
-                </div>
-            </div>
+            <div class="scale-in"><div class="w-20 h-20 bg-brand text-white rounded-full flex items-center justify-center text-4xl mx-auto mb-4 shadow-xl shadow-brand/30"><span class="material-icons-round" style="font-size: 40px">check</span></div></div>
             <h3 class="text-2xl font-extrabold text-slate-800 mb-1">Готово!</h3>
             <p class="text-sm text-slate-500 font-medium" id="success-text">Зміни успішно збережено</p>
         </div>
     </div>
 
-    <div id="details-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm transition-opacity">
+    <div id="details-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
         <div class="absolute inset-0" onclick="closeDetails()"></div>
         <div class="bg-white w-full sm:max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl modal-enter relative z-10">
             <div class="w-12 h-1 bg-slate-200 rounded-full mx-auto mb-6"></div>
             <div class="text-center mb-6">
                 <div class="w-20 h-20 bg-sky-100 text-brand rounded-full flex items-center justify-center text-3xl font-extrabold mx-auto mb-3 shadow-inner" id="modal-avatar">A</div>
-                <h3 class="text-2xl font-extrabold text-slate-800 leading-tight" id="modal-name">Ім'я</h3>
-                <a href="#" id="modal-phone-link" class="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-full text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-brand transition">
-                    <span class="material-icons-round text-sm">phone</span> <span id="modal-phone">...</span>
-                </a>
+                <h3 class="text-2xl font-extrabold text-slate-800" id="modal-name">Ім'я</h3>
+                <a href="#" id="modal-phone-link" class="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-full text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-brand transition"><span class="material-icons-round text-sm">phone</span> <span id="modal-phone">...</span></a>
             </div>
             <div class="grid grid-cols-2 gap-3 mb-4">
-                <div class="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
-                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Дата</span>
-                    <div class="text-lg font-bold text-brand" id="display-date">--.--</div>
-                </div>
-                <div class="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
-                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Час</span>
-                    <div class="text-2xl font-black text-brand" id="display-time">--:--</div>
-                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100"><span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Дата</span><div class="text-lg font-bold text-brand" id="display-date">--.--</div></div>
+                <div class="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100"><span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Час</span><div class="text-2xl font-black text-brand" id="display-time">--:--</div></div>
             </div>
             <div class="bg-sky-50 p-4 rounded-2xl mb-6 border border-sky-100">
-                <div class="flex items-start gap-3">
-                    <span class="material-icons-round text-sky-600 mt-1">spa</span>
-                    <div>
-                        <div class="text-xs text-sky-800 font-bold uppercase mb-1 opacity-60">Процедура</div>
-                        <div class="font-bold text-brand text-lg leading-tight" id="modal-service">Послуга</div>
-                        <div class="text-sm text-slate-500 mt-1 flex items-center gap-1">
-                            <span class="material-icons-round text-sm">person</span> <span id="modal-specialist">Майстер</span>
-                        </div>
-                    </div>
-                </div>
+                <div class="flex items-start gap-3"><span class="material-icons-round text-sky-600 mt-1">spa</span><div><div class="text-xs text-sky-800 font-bold uppercase mb-1 opacity-60">Процедура</div><div class="font-bold text-brand text-lg" id="modal-service">Послуга</div><div class="text-sm text-slate-500 mt-1 flex items-center gap-1"><span class="material-icons-round text-sm">person</span> <span id="modal-specialist">Майстер</span></div></div></div>
             </div>
             <div class="space-y-3">
-                <button id="btn-confirm" onclick="askConfirm()" class="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-base shadow-lg shadow-green-600/20 active:scale-[0.98] transition flex items-center justify-center gap-2">
-                    <span class="material-icons-round">check_circle</span> ПІДТВЕРДИТИ ЗАПИС
-                </button>
+                <button id="btn-confirm" onclick="askConfirm()" class="w-full bg-green-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-600/20 active:scale-[0.98] transition flex items-center justify-center gap-2"><span class="material-icons-round">check_circle</span> ПІДТВЕРДИТИ</button>
                 <div class="grid grid-cols-2 gap-3">
-                    <button onclick="editCurrentAppointment()" class="w-full bg-slate-100 text-brand py-3 rounded-2xl font-bold text-sm hover:bg-slate-200 transition">✎ РЕДАГУВАТИ</button>
-                    <button onclick="askDelete()" class="w-full bg-red-50 text-red-500 py-3 rounded-2xl text-sm font-bold hover:bg-red-100 transition">🗑 ВИДАЛИТИ</button>
+                    <button onclick="editCurrentAppointment()" class="w-full bg-slate-100 text-brand py-3 rounded-2xl font-bold text-sm hover:bg-slate-200">✎ РЕДАГУВАТИ</button>
+                    <button onclick="askDelete()" class="w-full bg-red-50 text-red-500 py-3 rounded-2xl text-sm font-bold hover:bg-red-100">🗑 ВИДАЛИТИ</button>
                 </div>
             </div>
             <input type="hidden" id="current-id">
@@ -192,92 +157,54 @@
     <div id="appt-editor-modal" class="fixed inset-0 bg-slate-900/60 z-[60] hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
         <div class="absolute inset-0" onclick="closeApptEditor()"></div>
         <div class="bg-white w-full sm:max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl modal-enter relative z-10 max-h-[95vh] flex flex-col">
-            <div class="flex justify-between items-center mb-4 shrink-0">
-                <h3 class="text-xl font-extrabold text-brand" id="appt-modal-title">Новий запис</h3>
-                <button onclick="closeApptEditor()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-200"><span class="material-icons-round text-lg">close</span></button>
-            </div>
-
+            <div class="flex justify-between items-center mb-4 shrink-0"><h3 class="text-xl font-extrabold text-brand" id="appt-modal-title">Новий запис</h3><button onclick="closeApptEditor()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-200"><span class="material-icons-round text-lg">close</span></button></div>
             <div class="flex-1 overflow-y-auto space-y-4 pr-1 pb-4">
                 <input type="hidden" id="edit-appt-id">
-
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
                     <label class="text-xs font-bold text-slate-400 uppercase block">Клієнт</label>
-                    <input type="text" id="edit-client-name" placeholder="Ім'я клієнта" class="w-full bg-white p-3 rounded-xl font-bold border border-slate-200 focus:border-sky-500 outline-none">
+                    <input type="text" id="edit-client-name" placeholder="Ім'я" class="w-full bg-white p-3 rounded-xl font-bold border border-slate-200 focus:border-sky-500 outline-none">
                     <input type="tel" id="edit-client-phone" placeholder="Телефон" class="w-full bg-white p-3 rounded-xl font-bold border border-slate-200 focus:border-sky-500 outline-none">
                 </div>
-
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-slate-400 uppercase ml-1">Послуга</label>
-                    <div onclick="openSelector('service')" id="edit-service-display" class="w-full bg-white p-4 rounded-xl font-bold border border-slate-200 text-brand flex justify-between items-center cursor-pointer active:bg-slate-50 shadow-sm">
-                        <span class="truncate">Оберіть послугу...</span>
-                        <span class="material-icons-round text-slate-400">chevron_right</span>
-                    </div>
+                    <div onclick="openSelector('service')" id="edit-service-display" class="w-full bg-white p-4 rounded-xl font-bold border border-slate-200 text-brand flex justify-between items-center cursor-pointer active:bg-slate-50 shadow-sm"><span class="truncate">Оберіть послугу...</span><span class="material-icons-round text-slate-400">chevron_right</span></div>
                     <input type="hidden" id="edit-service-value">
                 </div>
-
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-slate-400 uppercase ml-1">Спеціаліст</label>
-                    <div onclick="openSelector('specialist')" id="edit-spec-display" class="w-full bg-white p-4 rounded-xl font-bold border border-slate-200 text-brand flex justify-between items-center cursor-pointer active:bg-slate-50 shadow-sm">
-                        <span class="truncate">Оберіть майстра...</span>
-                        <span class="material-icons-round text-slate-400">chevron_right</span>
-                    </div>
+                    <div onclick="openSelector('specialist')" id="edit-spec-display" class="w-full bg-white p-4 rounded-xl font-bold border border-slate-200 text-brand flex justify-between items-center cursor-pointer active:bg-slate-50 shadow-sm"><span class="truncate">Оберіть майстра...</span><span class="material-icons-round text-slate-400">chevron_right</span></div>
                     <input type="hidden" id="edit-spec-value">
                 </div>
-
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-slate-400 uppercase ml-1">Дата та Час</label>
                     <input type="date" id="edit-date" onchange="updateTimeSlots()" class="w-full bg-white p-3 rounded-xl font-bold border border-slate-200 focus:border-sky-500 outline-none text-brand mb-2">
-
                     <div id="slots-container" class="grid grid-cols-4 gap-2"></div>
                     <input type="hidden" id="edit-time">
                 </div>
             </div>
-
-            <button onclick="saveAppointment()" class="w-full bg-brand text-white py-4 rounded-2xl font-bold shadow-xl shadow-brand/20 active:scale-[0.98] transition mt-2 shrink-0">ЗБЕРЕГТИ ЗАПИС</button>
+            <button onclick="saveAppointment()" class="w-full bg-brand text-white py-4 rounded-2xl font-bold shadow-xl shadow-brand/20 active:scale-[0.98] transition mt-2 shrink-0">ЗБЕРЕГТИ</button>
         </div>
     </div>
 
     <div id="selector-modal" class="fixed inset-0 bg-slate-900/60 z-[70] hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
         <div class="absolute inset-0" onclick="document.getElementById('selector-modal').classList.add('hidden')"></div>
         <div class="bg-white w-full sm:max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl modal-enter relative z-10 max-h-[80vh] flex flex-col">
-            <div class="flex justify-between items-center mb-4 shrink-0">
-                <h3 class="text-xl font-extrabold text-brand" id="selector-title">Вибір</h3>
-                <button onclick="document.getElementById('selector-modal').classList.add('hidden')" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-200"><span class="material-icons-round text-lg">close</span></button>
-            </div>
-            <div id="selector-content" class="flex-1 overflow-y-auto space-y-2 min-h-0">
-                </div>
+            <div class="flex justify-between items-center mb-4 shrink-0"><h3 class="text-xl font-extrabold text-brand" id="selector-title">Вибір</h3><button onclick="document.getElementById('selector-modal').classList.add('hidden')" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-200"><span class="material-icons-round text-lg">close</span></button></div>
+            <div id="selector-content" class="flex-1 overflow-y-auto space-y-2 min-h-0"></div>
         </div>
     </div>
 
     <div id="team-modal" class="fixed inset-0 bg-slate-900/60 z-[60] hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
         <div class="absolute inset-0" onclick="closeTeamModal()"></div>
         <div class="bg-white w-full sm:max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl modal-enter relative z-10 max-h-[90vh] flex flex-col">
-             <div class="flex justify-between items-center mb-6 shrink-0">
-                <h3 class="text-xl font-extrabold text-brand" id="team-modal-title">Працівник</h3>
-                <button onclick="closeTeamModal()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-200"><span class="material-icons-round text-lg">close</span></button>
-            </div>
-            
+             <div class="flex justify-between items-center mb-6 shrink-0"><h3 class="text-xl font-extrabold text-brand" id="team-modal-title">Працівник</h3><button onclick="closeTeamModal()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-200"><span class="material-icons-round text-lg">close</span></button></div>
             <div class="space-y-4 overflow-y-auto flex-1 min-h-0 pb-4">
                 <input type="hidden" id="team-id">
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase ml-1 mb-1 block">Ім'я</label>
-                    <input type="text" id="team-name" placeholder="Напр. Ольга" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-sky-500 font-bold text-lg text-brand">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase ml-1 mb-1 block">Посада</label>
-                    <input type="text" id="team-role" placeholder="Напр. Подолог" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-sky-500">
-                </div>
-
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <label class="text-xs font-bold text-slate-400 uppercase mb-3 block flex items-center gap-1"><span class="material-icons-round text-sm">schedule</span> Робочі години</label>
-                    <div class="grid grid-cols-4 gap-2" id="team-hours-grid"></div>
-                </div>
+                <div><label class="text-xs font-bold text-slate-400 uppercase ml-1 mb-1 block">Ім'я</label><input type="text" id="team-name" placeholder="Напр. Ольга" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-sky-500 font-bold text-lg text-brand"></div>
+                <div><label class="text-xs font-bold text-slate-400 uppercase ml-1 mb-1 block">Посада</label><input type="text" id="team-role" placeholder="Напр. Подолог" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-sky-500"></div>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100"><label class="text-xs font-bold text-slate-400 uppercase mb-3 block flex items-center gap-1"><span class="material-icons-round text-sm">schedule</span> Робочі години</label><div class="grid grid-cols-4 gap-2" id="team-hours-grid"></div></div>
             </div>
-
-            <div class="pt-2 mt-2 shrink-0">
-                <button onclick="saveTeamMember()" class="w-full bg-brand text-white py-4 rounded-2xl font-bold shadow-xl shadow-brand/20 active:scale-[0.98] transition">ЗБЕРЕГТИ</button>
-                <button id="btn-delete-team" onclick="deleteTeamMember()" class="w-full mt-2 text-red-400 py-3 text-xs font-bold hover:text-red-600 transition hidden">Видалити працівника</button>
-            </div>
+            <div class="pt-2 mt-2 shrink-0"><button onclick="saveTeamMember()" class="w-full bg-brand text-white py-4 rounded-2xl font-bold shadow-xl shadow-brand/20 active:scale-[0.98] transition">ЗБЕРЕГТИ</button><button id="btn-delete-team" onclick="deleteTeamMember()" class="w-full mt-2 text-red-400 py-3 text-xs font-bold hover:text-red-600 transition hidden">Видалити працівника</button></div>
         </div>
     </div>
 
@@ -288,10 +215,8 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, updateDoc, doc, orderBy, query, deleteDoc, setDoc, addDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-
+    <script>
+        /* === CONFIGURATION & SETUP === */
         const firebaseConfig = {
             apiKey: "AIzaSyBzjaoG4jyD1pjBH9Z0XhL6ZzAp_WT4Ep4",
             authDomain: "happyfoot-lviv.firebaseapp.com",
@@ -301,8 +226,9 @@
             appId: "1:825936740538:web:7aa5fa34a1a5f020f04283"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        // Initialize Firebase Global (Compat)
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
         /* --- STATE --- */
         const ALL_HOURS = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
@@ -310,12 +236,20 @@
         let currentAppointments = [];
         let specialistsData = [];
 
-        window.checkPin = function() {
-            if(document.getElementById('pin-input').value === '1111') {
-                document.getElementById('login-screen').remove();
-                initApp();
+        /* --- LOGIN LOGIC --- */
+        function checkPin() {
+            const input = document.getElementById('pin-input');
+            const errorMsg = document.getElementById('login-error');
+            
+            if(input.value === '1111') {
+                try {
+                    document.getElementById('login-screen').remove();
+                    initApp();
+                } catch(e) {
+                    errorMsg.innerText = "Помилка завантаження. Перевірте інтернет.";
+                    errorMsg.classList.remove('hidden');
+                }
             } else { 
-                const input = document.getElementById('pin-input');
                 input.value = ''; 
                 input.classList.add('bg-red-500/20');
                 setTimeout(() => input.classList.remove('bg-red-500/20'), 300);
@@ -323,19 +257,20 @@
         }
 
         function initApp() {
-            setupAppointments();
-            setupTeam();
-            setupServices();
             const now = new Date();
             const options = { weekday: 'long', day: 'numeric', month: 'long' };
             let dateStr = now.toLocaleDateString('uk-UA', options);
             dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
             document.getElementById('current-date').innerText = dateStr;
+            
             renderHoursGrid();
+            setupAppointments();
+            setupTeam();
+            setupServices();
         }
 
-        /* --- UTILS --- */
-        window.showSuccess = (text, callback) => {
+        /* --- UI HELPERS --- */
+        function showSuccess(text, callback) {
             const modal = document.getElementById('success-modal');
             document.getElementById('success-text').innerText = text;
             modal.classList.remove('hidden');
@@ -345,12 +280,12 @@
             }, 1500);
         }
 
-        window.showConfirm = (text, onConfirm) => {
+        function showConfirm(text, onConfirm) {
             const modal = document.getElementById('confirm-modal');
             document.getElementById('confirm-text').innerText = text;
             const yesBtn = document.getElementById('confirm-yes-btn');
             
-            // Clean up old listeners
+            // Remove old listeners by cloning
             const newBtn = yesBtn.cloneNode(true);
             yesBtn.parentNode.replaceChild(newBtn, yesBtn);
             
@@ -361,25 +296,25 @@
             modal.classList.remove('hidden');
         }
 
-        window.switchTab = function(tabName) {
+        function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tabName}`).classList.add('active');
             document.querySelectorAll('.nav-btn').forEach(btn => btn.className = "nav-btn flex flex-col items-center p-2 w-1/3 rounded-xl transition-all text-slate-400 hover:bg-slate-50");
             document.getElementById(`btn-tab-${tabName}`).className = "nav-btn flex flex-col items-center p-2 w-1/3 rounded-2xl transition-all text-brand bg-sky-50 shadow-sm transform scale-105";
         }
 
-        /* === APPOINTMENTS LIST === */
+        /* === APPOINTMENTS === */
         function setupAppointments() {
-            onSnapshot(query(collection(db, "appointments"), orderBy("date", "asc")), (snapshot) => {
+            db.collection("appointments").orderBy("date", "asc").onSnapshot((snapshot) => {
                 const list = document.getElementById('list-active');
                 list.innerHTML = ''; 
                 currentAppointments = [];
                 let count = 0;
                 const today = new Date().toISOString().split('T')[0];
 
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    const id = docSnap.id;
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const id = doc.id;
                     currentAppointments.push({ id, ...data });
 
                     if(data.date >= today) {
@@ -387,44 +322,29 @@
                         const el = document.createElement('div');
                         const isConfirmed = data.status === 'confirmed';
                         const statusColor = isConfirmed ? 'border-green-500' : 'border-sky-500';
-                        const icon = isConfirmed 
-                            ? `<div class="bg-green-100 text-green-700 p-1 rounded-full"><span class="material-icons-round text-sm">check</span></div>` 
-                            : `<div class="bg-sky-100 text-sky-700 p-1 rounded-full"><span class="material-icons-round text-sm">priority_high</span></div>`;
+                        const icon = isConfirmed ? `<div class="bg-green-100 text-green-700 p-1 rounded-full"><span class="material-icons-round text-sm">check</span></div>` : `<div class="bg-sky-100 text-sky-700 p-1 rounded-full"><span class="material-icons-round text-sm">priority_high</span></div>`;
 
                         el.className = `p-4 rounded-2xl shadow-sm border border-slate-100 border-l-[6px] ${statusColor} bg-white cursor-pointer active:scale-95 transition-transform relative overflow-hidden`;
                         el.onclick = () => openDetails(id);
-
                         el.innerHTML = `
                             <div class="flex justify-between items-start mb-3 relative z-10">
                                 <div class="flex items-center gap-3">
                                     <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 text-lg border border-slate-200 shadow-inner">${data.name[0]}</div>
-                                    <div>
-                                        <h4 class="font-extrabold text-slate-800 leading-tight text-lg">${data.name}</h4>
-                                        <div class="text-xs text-slate-500 font-bold mt-0.5 flex items-center gap-1">
-                                            <span class="material-icons-round text-[14px]">calendar_today</span> ${data.date} 
-                                            <span class="mx-1">•</span> 
-                                            <span class="text-brand bg-sky-50 px-1.5 rounded">${data.time}</span>
-                                        </div>
-                                    </div>
+                                    <div><h4 class="font-extrabold text-slate-800 leading-tight text-lg">${data.name}</h4><div class="text-xs text-slate-500 font-bold mt-0.5 flex items-center gap-1"><span class="material-icons-round text-[14px]">calendar_today</span> ${data.date} <span class="mx-1">•</span> <span class="text-brand bg-sky-50 px-1.5 rounded">${data.time}</span></div></div>
                                 </div>
                                 ${icon}
                             </div>
-                            <div class="bg-slate-50 p-2.5 rounded-xl text-xs text-slate-600 flex justify-between items-center border border-slate-100 relative z-10">
-                                <span class="font-bold text-brand truncate pr-2 flex items-center gap-1"><span class="material-icons-round text-sm">spa</span> ${data.serviceName || 'Послуга'}</span>
-                                <span class="flex items-center gap-1 truncate"><span class="material-icons-round text-sm">person</span> ${data.specialistName || 'Будь-хто'}</span>
-                            </div>
+                            <div class="bg-slate-50 p-2.5 rounded-xl text-xs text-slate-600 flex justify-between items-center border border-slate-100 relative z-10"><span class="font-bold text-brand truncate pr-2 flex items-center gap-1"><span class="material-icons-round text-sm">spa</span> ${data.serviceName || 'Послуга'}</span><span class="flex items-center gap-1 truncate"><span class="material-icons-round text-sm">person</span> ${data.specialistName || 'Будь-хто'}</span></div>
                         `;
                         list.appendChild(el);
                     }
                 });
-
                 if(count === 0) list.innerHTML = `<div class="flex flex-col items-center justify-center py-20 opacity-50"><span class="material-icons-round text-6xl text-slate-300 mb-2">event_busy</span><div class="text-slate-400 font-bold">Немає активних записів</div></div>`;
                 document.getElementById('appt-count').innerText = `${count} записів`;
             });
         }
 
-        /* === APPOINTMENT DETAILS & EDITING === */
-        window.openDetails = (id) => {
+        function openDetails(id) {
             const data = currentAppointments.find(a => a.id === id);
             document.getElementById('current-id').value = id;
             document.getElementById('modal-name').innerText = data.name;
@@ -435,47 +355,38 @@
             document.getElementById('display-time').innerText = data.time;
             document.getElementById('modal-service').innerText = data.serviceName || 'Не вказано';
             document.getElementById('modal-specialist').innerText = data.specialistName || 'Будь-хто';
-
-            const btnConfirm = document.getElementById('btn-confirm');
-            btnConfirm.classList.toggle('hidden', data.status === 'confirmed');
+            document.getElementById('btn-confirm').classList.toggle('hidden', data.status === 'confirmed');
             document.getElementById('details-modal').classList.remove('hidden');
         }
-
-        window.closeDetails = () => document.getElementById('details-modal').classList.add('hidden');
+        function closeDetails() { document.getElementById('details-modal').classList.add('hidden'); }
         
-        window.askConfirm = () => {
+        function askConfirm() {
              showSuccess("Запис підтверджено", async () => {
-                 await updateDoc(doc(db, "appointments", document.getElementById('current-id').value), { status: 'confirmed' });
+                 await db.collection("appointments").doc(document.getElementById('current-id').value).update({ status: 'confirmed' });
                  closeDetails();
              });
         }
-
-        window.askDelete = () => {
-             showConfirm("Видалити цей запис безповоротно?", async () => {
-                 await deleteDoc(doc(db, "appointments", document.getElementById('current-id').value));
+        function askDelete() {
+             showConfirm("Видалити цей запис?", async () => {
+                 await db.collection("appointments").doc(document.getElementById('current-id').value).delete();
                  closeDetails();
-                 // Delay to ensure modal closes first, then show success
                  setTimeout(() => showSuccess("Запис видалено"), 300);
              });
         }
 
-        /* === MANUAL APPOINTMENT CREATION/EDITING === */
-        window.openAppointmentEditor = (id = null) => {
+        /* === EDITOR APPOINTMENT === */
+        function openAppointmentEditor(id = null) {
             document.getElementById('edit-appt-id').value = id || '';
-            document.getElementById('appt-modal-title').innerText = id ? "Редагування запису" : "Новий запис";
-
+            document.getElementById('appt-modal-title').innerText = id ? "Редагування" : "Новий запис";
+            
             if(id) {
                 const data = currentAppointments.find(a => a.id === id);
                 document.getElementById('edit-client-name').value = data.name;
                 document.getElementById('edit-client-phone').value = data.phone;
-
-                // Set Display Values
                 document.getElementById('edit-service-value').value = data.serviceName;
                 document.getElementById('edit-service-display').querySelector('span').innerText = data.serviceName;
-
                 document.getElementById('edit-spec-value').value = data.specialistId || '';
                 document.getElementById('edit-spec-display').querySelector('span').innerText = data.specialistName || 'Оберіть майстра...';
-
                 document.getElementById('edit-date').value = data.date;
                 document.getElementById('edit-time').value = data.time;
                 document.getElementById('details-modal').classList.add('hidden');
@@ -489,32 +400,82 @@
                 document.getElementById('edit-date').value = new Date().toISOString().split('T')[0];
                 document.getElementById('edit-time').value = '';
             }
-
             updateTimeSlots();
             document.getElementById('appt-editor-modal').classList.remove('hidden');
         }
+        function editCurrentAppointment() { openAppointmentEditor(document.getElementById('current-id').value); }
+        function closeApptEditor() { document.getElementById('appt-editor-modal').classList.add('hidden'); }
 
-        window.editCurrentAppointment = () => openAppointmentEditor(document.getElementById('current-id').value);
-        window.closeApptEditor = () => document.getElementById('appt-editor-modal').classList.add('hidden');
+        async function updateTimeSlots() {
+            const specId = document.getElementById('edit-spec-value').value;
+            const date = document.getElementById('edit-date').value;
+            const container = document.getElementById('slots-container');
+            const hiddenInput = document.getElementById('edit-time');
+            container.innerHTML = '';
 
-        /* === NEW SELECTOR LOGIC === */
-        window.openSelector = (type) => {
+            if(!specId || !date) { container.innerHTML = '<div class="col-span-4 text-xs text-slate-400 text-center py-4">Оберіть майстра та дату</div>'; return; }
+
+            const spec = specialistsData.find(s => s.id === specId);
+            const availableHours = spec?.hours || [];
+            if(availableHours.length === 0) { container.innerHTML = '<div class="col-span-4 text-xs text-red-400 text-center py-2">Немає робочих годин</div>'; return; }
+
+            const snap = await db.collection("appointments").where("date", "==", date).get();
+            const busySlots = [];
+            const currentApptId = document.getElementById('edit-appt-id').value;
+            snap.forEach(doc => { if(doc.data().specialistId === specId && doc.id !== currentApptId) busySlots.push(doc.data().time); });
+
+            availableHours.forEach(time => {
+                const isBusy = busySlots.includes(time);
+                const btn = document.createElement('div');
+                const isSelected = hiddenInput.value === time;
+                let bgClass = isBusy ? 'bg-slate-100 text-slate-300 decoration-slice line-through' : (isSelected ? 'bg-brand text-white border-brand' : 'bg-white text-brand border-slate-200 cursor-pointer hover:border-brand');
+                btn.className = `py-3 rounded-xl text-xs font-bold text-center border transition ${bgClass}`;
+                btn.innerText = time;
+                if(!isBusy) {
+                    btn.onclick = () => {
+                        document.querySelectorAll('#slots-container > div').forEach(d => { if(!d.classList.contains('line-through')) d.className = 'py-3 rounded-xl text-xs font-bold text-center border border-slate-200 text-brand bg-white cursor-pointer hover:border-brand transition'; });
+                        btn.className = 'py-3 rounded-xl text-xs font-bold text-center border border-brand bg-brand text-white cursor-pointer transition';
+                        hiddenInput.value = time;
+                    }
+                }
+                container.appendChild(btn);
+            });
+        }
+
+        async function saveAppointment() {
+            const id = document.getElementById('edit-appt-id').value;
+            const name = document.getElementById('edit-client-name').value;
+            const phone = document.getElementById('edit-client-phone').value;
+            const serviceName = document.getElementById('edit-service-value').value;
+            const specialistId = document.getElementById('edit-spec-value').value;
+            const specialistName = document.getElementById('edit-spec-display').innerText.replace('chevron_right','').trim();
+            const date = document.getElementById('edit-date').value;
+            const time = document.getElementById('edit-time').value;
+
+            if(!name || !phone || !serviceName || !specialistId || !date || !time) return alert('Заповніть всі поля!');
+            const payload = { name, phone, serviceName, specialistId, specialistName, date, time, status: 'confirmed' };
+            try {
+                if(id) await db.collection("appointments").doc(id).update(payload);
+                else await db.collection("appointments").add({ ...payload, createdAt: new Date() });
+                closeApptEditor();
+                showSuccess(id ? "Запис оновлено" : "Запис створено");
+            } catch(e) { alert('Помилка збереження'); console.error(e); }
+        }
+
+        /* === SELECTOR === */
+        function openSelector(type) {
             const modal = document.getElementById('selector-modal');
             const title = document.getElementById('selector-title');
             const content = document.getElementById('selector-content');
             content.innerHTML = '';
-
+            
             if (type === 'service') {
                 title.innerText = "Оберіть послугу";
                 Object.values(servicesData).forEach(cat => {
-                    const header = document.createElement('div');
-                    header.className = "text-xs font-bold text-slate-400 uppercase mt-4 mb-2 pl-2";
-                    header.innerText = cat.title;
-                    content.appendChild(header);
-
+                    content.innerHTML += `<div class="text-xs font-bold text-slate-400 uppercase mt-4 mb-2 pl-2">${cat.title}</div>`;
                     (cat.items || []).forEach(item => {
                         const btn = document.createElement('div');
-                        btn.className = "bg-slate-50 p-4 rounded-xl mb-2 flex justify-between items-center cursor-pointer active:bg-slate-100 active:scale-[0.99] transition";
+                        btn.className = "bg-slate-50 p-4 rounded-xl mb-2 flex justify-between items-center cursor-pointer active:bg-slate-100 transition";
                         btn.innerHTML = `<span class="font-bold text-brand">${item.name}</span><span class="text-xs font-bold bg-white px-2 py-1 rounded text-slate-500">${item.price}</span>`;
                         btn.onclick = () => {
                             document.getElementById('edit-service-value').value = item.name;
@@ -528,11 +489,8 @@
                 title.innerText = "Оберіть майстра";
                 specialistsData.forEach(s => {
                     const btn = document.createElement('div');
-                    btn.className = "bg-slate-50 p-4 rounded-xl mb-2 flex items-center gap-3 cursor-pointer active:bg-slate-100 active:scale-[0.99] transition";
-                    btn.innerHTML = `
-                        <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center font-bold text-brand shadow-sm">${s.name[0]}</div>
-                        <div><div class="font-bold text-brand">${s.name}</div><div class="text-xs text-slate-500">${s.role}</div></div>
-                    `;
+                    btn.className = "bg-slate-50 p-4 rounded-xl mb-2 flex items-center gap-3 cursor-pointer active:bg-slate-100 transition";
+                    btn.innerHTML = `<div class="w-10 h-10 bg-white rounded-full flex items-center justify-center font-bold text-brand shadow-sm">${s.name[0]}</div><div><div class="font-bold text-brand">${s.name}</div><div class="text-xs text-slate-500">${s.role}</div></div>`;
                     btn.onclick = () => {
                         document.getElementById('edit-spec-value').value = s.id;
                         document.getElementById('edit-spec-display').querySelector('span').innerText = s.name;
@@ -543,87 +501,9 @@
                 });
             }
             modal.classList.remove('hidden');
-        };
-
-        window.updateTimeSlots = async () => {
-            const specId = document.getElementById('edit-spec-value').value;
-            const date = document.getElementById('edit-date').value;
-            const container = document.getElementById('slots-container');
-            const hiddenInput = document.getElementById('edit-time');
-            container.innerHTML = '';
-
-            if(!specId || !date) {
-                container.innerHTML = '<div class="col-span-4 text-xs text-slate-400 text-center py-4">Спочатку оберіть майстра та дату</div>';
-                return;
-            }
-
-            const spec = specialistsData.find(s => s.id === specId);
-            const availableHours = spec?.hours || [];
-
-            const q = query(collection(db, "appointments"), where("date", "==", date));
-            const snap = await getDocs(q);
-            const busySlots = [];
-            const currentApptId = document.getElementById('edit-appt-id').value;
-
-            snap.forEach(doc => {
-                const d = doc.data();
-                if(d.specialistId === specId && doc.id !== currentApptId) busySlots.push(d.time);
-            });
-
-            if(availableHours.length === 0) {
-                container.innerHTML = '<div class="col-span-4 text-xs text-red-400 text-center font-bold py-2">Цей майстер не має робочих годин</div>';
-                return;
-            }
-
-            availableHours.forEach(time => {
-                const isBusy = busySlots.includes(time);
-                const btn = document.createElement('div');
-                const isSelected = hiddenInput.value === time;
-
-                let bgClass = isBusy ? 'bg-slate-100 text-slate-300 cursor-not-allowed decoration-slice' : (isSelected ? 'bg-brand text-white border-brand' : 'bg-white text-brand border-slate-200');
-                if(!isBusy) bgClass += ' cursor-pointer hover:border-brand hover:text-brand';
-
-                btn.className = `py-3 rounded-xl text-xs font-bold text-center border transition ${bgClass}`;
-                btn.innerText = time;
-                if(isBusy) btn.style.textDecoration = 'line-through';
-
-                if(!isBusy) {
-                    btn.onclick = () => {
-                        document.querySelectorAll('#slots-container > div').forEach(d => {
-                             if(!d.style.textDecoration) d.className = 'py-3 rounded-xl text-xs font-bold text-center border border-slate-200 text-brand bg-white cursor-pointer hover:border-brand transition';
-                        });
-                        btn.className = 'py-3 rounded-xl text-xs font-bold text-center border border-brand bg-brand text-white cursor-pointer transition';
-                        hiddenInput.value = time;
-                    }
-                }
-                container.appendChild(btn);
-            });
         }
 
-        window.saveAppointment = async () => {
-            const id = document.getElementById('edit-appt-id').value;
-            const name = document.getElementById('edit-client-name').value;
-            const phone = document.getElementById('edit-client-phone').value;
-            const serviceName = document.getElementById('edit-service-value').value;
-            const specialistId = document.getElementById('edit-spec-value').value;
-            const specialistName = document.getElementById('edit-spec-display').innerText.replace('chevron_right','').trim();
-            const date = document.getElementById('edit-date').value;
-            const time = document.getElementById('edit-time').value;
-
-            if(!name || !phone || !serviceName || !specialistId || !date || !time) return alert('Заповніть всі поля!');
-
-            const payload = { name, phone, serviceName, specialistId, specialistName, date, time, status: 'confirmed' };
-
-            try {
-                if(id) await updateDoc(doc(db, "appointments", id), payload);
-                else await addDoc(collection(db, "appointments"), { ...payload, createdAt: new Date() });
-                closeApptEditor();
-                
-                showSuccess(id ? "Запис оновлено" : "Запис створено", closeApptEditor);
-            } catch(e) { alert('Помилка збереження'); console.error(e); }
-        }
-
-        /* === TEAM MANAGEMENT === */
+        /* === TEAM === */
         function renderHoursGrid() {
             const grid = document.getElementById('team-hours-grid');
             grid.innerHTML = '';
@@ -631,209 +511,119 @@
                 const label = document.createElement('label');
                 label.className = "flex items-center justify-center py-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 select-none text-[11px] font-bold transition-all";
                 label.innerHTML = `<input type="checkbox" value="${h}" class="hidden peer"> <span class="peer-checked:text-sky-600 peer-checked:scale-110 transition-transform block">${h}</span>`;
-                label.querySelector('input').addEventListener('change', (e) => {
-                    if(e.target.checked) label.classList.add('bg-sky-50', 'border-sky-300', 'shadow-sm');
-                    else label.classList.remove('bg-sky-50', 'border-sky-300', 'shadow-sm');
-                });
+                label.querySelector('input').addEventListener('change', (e) => { e.target.checked ? label.classList.add('bg-sky-50', 'border-sky-300') : label.classList.remove('bg-sky-50', 'border-sky-300'); });
                 grid.appendChild(label);
             });
         }
-
         function setupTeam() {
-            onSnapshot(collection(db, "specialists"), (snap) => {
+            db.collection("specialists").onSnapshot((snap) => {
                 const list = document.getElementById('team-list');
                 list.innerHTML = '';
                 specialistsData = [];
                 snap.forEach(d => {
                     const data = d.data();
                     specialistsData.push({id: d.id, ...data});
-                    const el = document.createElement('div');
-                    el.className = "bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center";
-                    el.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-500 shadow-inner">${data.name[0]}</div>
-                            <div>
-                                <div class="font-extrabold text-slate-800">${data.name}</div>
-                                <div class="text-xs text-sky-600 font-bold bg-sky-50 px-2 py-0.5 rounded inline-block mt-1">${data.role}</div>
-                            </div>
-                        </div>
-                        <button onclick="editTeam('${d.id}')" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-brand hover:text-white transition shadow-sm">
-                            <span class="material-icons-round text-lg">edit</span>
-                        </button>
-                    `;
-                    list.appendChild(el);
+                    list.innerHTML += `<div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center"><div class="flex items-center gap-3"><div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-500 shadow-inner">${data.name[0]}</div><div><div class="font-extrabold text-slate-800">${data.name}</div><div class="text-xs text-sky-600 font-bold bg-sky-50 px-2 py-0.5 rounded inline-block mt-1">${data.role}</div></div></div><button onclick="editTeam('${d.id}')" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-brand hover:text-white transition shadow-sm"><span class="material-icons-round text-lg">edit</span></button></div>`;
                 });
             });
         }
-
-        window.openTeamModal = () => {
+        function openTeamModal() {
             document.getElementById('team-modal-title').innerText = "Додати працівника";
             document.getElementById('team-id').value = '';
             document.getElementById('team-name').value = '';
             document.getElementById('team-role').value = '';
-            document.querySelectorAll('#team-hours-grid input').forEach(i => { 
-                i.checked = true; 
-                i.parentElement.classList.add('bg-sky-50', 'border-sky-300', 'shadow-sm');
-            }); 
+            document.querySelectorAll('#team-hours-grid input').forEach(i => { i.checked = true; i.parentElement.classList.add('bg-sky-50', 'border-sky-300'); });
             document.getElementById('btn-delete-team').classList.add('hidden');
             document.getElementById('team-modal').classList.remove('hidden');
         }
-
-        window.editTeam = (id) => {
+        function editTeam(id) {
             const spec = specialistsData.find(s => s.id === id);
             document.getElementById('team-modal-title').innerText = "Редагування";
             document.getElementById('team-id').value = id;
             document.getElementById('team-name').value = spec.name;
             document.getElementById('team-role').value = spec.role;
-            document.querySelectorAll('#team-hours-grid input').forEach(i => { 
+            document.querySelectorAll('#team-hours-grid input').forEach(i => {
                 const isChecked = (spec.hours || []).includes(i.value);
                 i.checked = isChecked;
-                if(isChecked) i.parentElement.classList.add('bg-sky-50', 'border-sky-300', 'shadow-sm');
-                else i.parentElement.classList.remove('bg-sky-50', 'border-sky-300', 'shadow-sm');
+                if(isChecked) i.parentElement.classList.add('bg-sky-50', 'border-sky-300');
+                else i.parentElement.classList.remove('bg-sky-50', 'border-sky-300');
             });
             document.getElementById('btn-delete-team').classList.remove('hidden');
             document.getElementById('team-modal').classList.remove('hidden');
         }
-
-        window.closeTeamModal = () => document.getElementById('team-modal').classList.add('hidden');
-
-        window.saveTeamMember = async () => {
+        function closeTeamModal() { document.getElementById('team-modal').classList.add('hidden'); }
+        async function saveTeamMember() {
             const id = document.getElementById('team-id').value;
             const name = document.getElementById('team-name').value;
             const role = document.getElementById('team-role').value;
             const hours = Array.from(document.querySelectorAll('#team-hours-grid input:checked')).map(i => i.value);
             if(!name) return alert('Введіть ім\'я');
-            
-            if(id) await updateDoc(doc(db, "specialists", id), { name, role, hours });
-            else await addDoc(collection(db, "specialists"), { name, role, hours });
+            if(id) await db.collection("specialists").doc(id).update({ name, role, hours });
+            else await db.collection("specialists").add({ name, role, hours });
             closeTeamModal();
-            
-            showSuccess(id ? "Працівника оновлено" : "Працівника додано", closeTeamModal);
+            showSuccess(id ? "Оновлено" : "Додано");
         }
-
-        window.deleteTeamMember = async () => {
-            showConfirm('Видалити працівника з бази?', async () => {
-                await deleteDoc(doc(db, "specialists", document.getElementById('team-id').value));
+        async function deleteTeamMember() {
+            showConfirm('Видалити працівника?', async () => {
+                await db.collection("specialists").doc(document.getElementById('team-id').value).delete();
                 closeTeamModal();
-                setTimeout(() => showSuccess("Працівника видалено"), 300);
+                setTimeout(() => showSuccess("Видалено"), 300);
             });
         }
 
-        /* === SERVICES UPDATE === */
+        /* === SERVICES === */
         function setupServices() {
-            const list = document.getElementById('services-list');
-            onSnapshot(collection(db, "services"), (snap) => {
+            db.collection("services").onSnapshot((snap) => {
+                const list = document.getElementById('services-list');
                 list.innerHTML = '';
-                servicesData = {}; 
+                servicesData = {};
                 snap.forEach(d => {
                      const data = d.data();
                      servicesData[d.id] = data; 
-                     const el = document.createElement('div');
-                     el.className = "bg-white p-4 rounded-2xl shadow-sm border border-slate-100";
-                     el.innerHTML = `
-                        <div class="flex justify-between items-center mb-3">
-                            <div class="flex items-center gap-3">
-                                <div class="text-3xl bg-slate-50 w-12 h-12 flex items-center justify-center rounded-xl">${data.icon||'✨'}</div>
-                                <div>
-                                    <div class="font-extrabold text-lg text-brand">${data.title}</div>
-                                    <div class="text-xs text-slate-400 font-bold">${(data.items||[]).length} процедур</div>
-                                </div>
-                            </div>
-                            <button onclick="openServiceModal('${d.id}')" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-brand hover:text-white transition shadow-sm">
-                                <span class="material-icons-round text-lg">edit</span>
-                            </button>
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                             ${(data.items || []).map(i => `<span class="text-[10px] bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg text-slate-500">${i.name}</span>`).join('')}
-                        </div>
-                     `;
-                     list.appendChild(el);
+                     list.innerHTML += `<div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100"><div class="flex justify-between items-center mb-3"><div class="flex items-center gap-3"><div class="text-3xl bg-slate-50 w-12 h-12 flex items-center justify-center rounded-xl">${data.icon||'✨'}</div><div><div class="font-extrabold text-lg text-brand">${data.title}</div><div class="text-xs text-slate-400 font-bold">${(data.items||[]).length} процедур</div></div></div><button onclick="openServiceModal('${d.id}')" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-brand hover:text-white transition shadow-sm"><span class="material-icons-round text-lg">edit</span></button></div><div class="flex flex-wrap gap-2">${(data.items || []).map(i => `<span class="text-[10px] bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg text-slate-500">${i.name}</span>`).join('')}</div></div>`;
                 });
             });
         }
-
-        /* === SERVICE EDITING LOGIC === */
         let currentServiceId = null;
-
-        window.openServiceModal = (id) => {
+        function openServiceModal(id) {
             const isNew = id === 'new-category';
             currentServiceId = isNew ? null : id;
             const data = isNew ? { title: '', icon: '✨', items: [] } : servicesData[id];
             const modalContent = document.getElementById('service-modal-content');
-            modalContent.innerHTML = `
-                <div class="flex justify-between items-center mb-4 shrink-0">
-                    <h3 class="text-xl font-extrabold text-brand">${isNew ? 'Нова категорія' : 'Редагування'}</h3>
-                    <button onclick="document.getElementById('service-editor-modal').classList.add('hidden')" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-200"><span class="material-icons-round text-lg">close</span></button>
-                </div>
-                <div class="flex-1 overflow-y-auto min-h-0 pr-1 pb-4">
-                    <div class="space-y-4 mb-6">
-                        <div>
-                            <label class="text-xs font-bold text-slate-400 uppercase ml-1 mb-1 block">Назва категорії</label>
-                            <input type="text" id="srv-title" value="${data.title}" placeholder="Напр. Масаж" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-lg text-brand outline-none focus:border-sky-500">
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold text-slate-400 uppercase ml-1 mb-1 block">Іконка (emoji)</label>
-                            <input type="text" id="srv-icon" value="${data.icon}" placeholder="🦶" class="w-16 text-center bg-slate-50 border border-slate-200 rounded-xl p-3 text-xl outline-none focus:border-sky-500">
-                        </div>
-                    </div>
-                    <div class="border-t border-slate-100 pt-4">
-                        <label class="text-xs font-bold text-brand uppercase mb-3 block flex items-center gap-2">
-                            <span class="material-icons-round text-sm">list</span> Список послуг
-                        </label>
-                        <div id="srv-items-list" class="space-y-3 pb-4"></div>
-                        <button onclick="addServiceItemInput()" class="w-full py-3 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-xs font-bold hover:border-sky-300 hover:text-sky-500 transition">+ Додати послугу</button>
-                    </div>
-                </div>
-                <div class="pt-4 mt-auto shrink-0 flex gap-3 border-t border-slate-50">
-                    <button onclick="saveService()" class="flex-1 bg-brand text-white py-4 rounded-2xl font-bold shadow-xl shadow-brand/20 active:scale-[0.98] transition">ЗБЕРЕГТИ</button>
-                    ${!isNew ? `<button onclick="deleteService()" class="w-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-100"><span class="material-icons-round">delete</span></button>` : ''}
-                </div>
-            `;
+            modalContent.innerHTML = `<div class="flex justify-between items-center mb-4 shrink-0"><h3 class="text-xl font-extrabold text-brand">${isNew ? 'Нова категорія' : 'Редагування'}</h3><button onclick="document.getElementById('service-editor-modal').classList.add('hidden')" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-200"><span class="material-icons-round text-lg">close</span></button></div><div class="flex-1 overflow-y-auto min-h-0 pr-1 pb-4"><div class="space-y-4 mb-6"><div><label class="text-xs font-bold text-slate-400 uppercase ml-1 mb-1 block">Назва категорії</label><input type="text" id="srv-title" value="${data.title}" placeholder="Напр. Масаж" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-lg text-brand outline-none focus:border-sky-500"></div><div><label class="text-xs font-bold text-slate-400 uppercase ml-1 mb-1 block">Іконка (emoji)</label><input type="text" id="srv-icon" value="${data.icon}" placeholder="🦶" class="w-16 text-center bg-slate-50 border border-slate-200 rounded-xl p-3 text-xl outline-none focus:border-sky-500"></div></div><div class="border-t border-slate-100 pt-4"><label class="text-xs font-bold text-brand uppercase mb-3 block flex items-center gap-2"><span class="material-icons-round text-sm">list</span> Список послуг</label><div id="srv-items-list" class="space-y-3 pb-4"></div><button onclick="addServiceItemInput()" class="w-full py-3 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-xs font-bold hover:border-sky-300 hover:text-sky-500 transition">+ Додати послугу</button></div></div><div class="pt-4 mt-auto shrink-0 flex gap-3 border-t border-slate-50"><button onclick="saveService()" class="flex-1 bg-brand text-white py-4 rounded-2xl font-bold shadow-xl shadow-brand/20 active:scale-[0.98] transition">ЗБЕРЕГТИ</button>${!isNew ? `<button onclick="deleteService()" class="w-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-100"><span class="material-icons-round">delete</span></button>` : ''}</div>`;
             const listContainer = document.getElementById('srv-items-list');
-            (data.items || []).forEach(item => { listContainer.appendChild(createItemRow(item.name, item.price, item.desc)); });
+            (data.items || []).forEach(item => listContainer.appendChild(createItemRow(item.name, item.price, item.desc)));
             if((data.items || []).length === 0) addServiceItemInput();
             document.getElementById('service-editor-modal').classList.remove('hidden');
-        };
-
+        }
         function createItemRow(name='', price='', desc='') {
             const div = document.createElement('div');
             div.className = "bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2 relative group hover:border-sky-200 transition-colors";
-            div.innerHTML = `
-                <div class="flex gap-2">
-                    <input type="text" class="item-name w-2/3 bg-white p-2.5 rounded-lg text-sm font-bold border border-slate-100 focus:border-sky-500 outline-none" placeholder="Назва послуги" value="${name}">
-                    <input type="text" class="item-price w-1/3 bg-white p-2.5 rounded-lg text-sm text-right font-bold text-brand border border-slate-100 focus:border-sky-500 outline-none" placeholder="Ціна" value="${price}">
-                </div>
-                <input type="text" class="item-desc w-full bg-white p-2.5 rounded-lg text-xs text-slate-500 border border-slate-100 focus:border-sky-500 outline-none" placeholder="Короткий опис" value="${desc}">
-                <button onclick="this.parentElement.remove()" class="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-sm opacity-0 group-hover:opacity-100 transition-opacity transform hover:scale-110">✕</button>
-            `;
+            div.innerHTML = `<div class="flex gap-2"><input type="text" class="item-name w-2/3 bg-white p-2.5 rounded-lg text-sm font-bold border border-slate-100 focus:border-sky-500 outline-none" placeholder="Послуга" value="${name}"><input type="text" class="item-price w-1/3 bg-white p-2.5 rounded-lg text-sm text-right font-bold text-brand border border-slate-100 focus:border-sky-500 outline-none" placeholder="Ціна" value="${price}"></div><input type="text" class="item-desc w-full bg-white p-2.5 rounded-lg text-xs text-slate-500 border border-slate-100 focus:border-sky-500 outline-none" placeholder="Опис" value="${desc}"><button onclick="this.parentElement.remove()" class="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-sm opacity-0 group-hover:opacity-100 transition-opacity transform hover:scale-110">✕</button>`;
             return div;
         }
-
-        window.addServiceItemInput = () => document.getElementById('srv-items-list').appendChild(createItemRow());
-
-        window.saveService = async () => {
+        function addServiceItemInput() { document.getElementById('srv-items-list').appendChild(createItemRow()); }
+        async function saveService() {
             const title = document.getElementById('srv-title').value;
             const icon = document.getElementById('srv-icon').value;
-            if(!title) return alert('Введіть назву категорії');
+            if(!title) return alert('Введіть назву');
             const items = [];
             document.querySelectorAll('#srv-items-list > div').forEach(div => {
                 const n = div.querySelector('.item-name').value;
                 if(n) items.push({ name: n, price: div.querySelector('.item-price').value, desc: div.querySelector('.item-desc').value });
             });
-            if (currentServiceId) await setDoc(doc(db, "services", currentServiceId), { title, icon, items });
-            else await addDoc(collection(db, "services"), { title, icon, items });
+            if (currentServiceId) await db.collection("services").doc(currentServiceId).set({ title, icon, items });
+            else await db.collection("services").add({ title, icon, items });
             document.getElementById('service-editor-modal').classList.add('hidden');
-            
-            showSuccess("Прайс оновлено", () => document.getElementById('service-editor-modal').classList.add('hidden'));
-        };
-
-        window.deleteService = async () => {
-            showConfirm("Видалити всю категорію?", async () => {
-                await deleteDoc(doc(db, "services", currentServiceId));
+            showSuccess("Збережено");
+        }
+        async function deleteService() {
+            showConfirm("Видалити категорію?", async () => {
+                await db.collection("services").doc(currentServiceId).delete();
                 document.getElementById('service-editor-modal').classList.add('hidden');
-                setTimeout(() => showSuccess("Категорію видалено"), 300);
+                setTimeout(() => showSuccess("Видалено"), 300);
             });
-        };
+        }
     </script>
 </body>
 </html>
