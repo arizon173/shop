@@ -39,8 +39,17 @@
         .bg-brand { background-color: #04273b; }
         .text-brand { color: #04273b; }
         
-        .screen { display: none; width: 100%; height: 100%; }
-        .screen.active { display: flex; flex-direction: column; }
+        .screen { 
+            display: none; 
+            width: 100%; 
+            height: 100%; 
+            flex-direction: column;
+        }
+        
+        /* Клас для активного екрану */
+        .screen.active { 
+            display: flex !important; 
+        }
         
         .tab-content { display: none; animation: fadeIn 0.2s ease; flex: 1; }
         .tab-content.active { display: block; }
@@ -85,7 +94,7 @@
             <div class="w-full bg-white/5 backdrop-blur-xl p-8 rounded-3xl border border-white/10 shadow-2xl">
                 <input type="password" id="pin-input" placeholder="••••" maxlength="4" inputmode="numeric"
                        class="w-full bg-slate-900/50 text-white text-center text-4xl tracking-[0.5em] p-4 rounded-2xl border border-white/10 mb-6 focus:border-sky-400 focus:ring-4 outline-none transition-all">
-                <button onclick="checkPin()" class="w-full bg-white text-brand font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-transform">УВІЙТИ</button>
+                <button id="login-btn" class="w-full bg-white text-brand font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-transform">УВІЙТИ</button>
             </div>
         </div>
     </div>
@@ -94,7 +103,7 @@
     <div id="dashboard-screen" class="screen bg-slate-50">
         
         <!-- Шапка з датою і кнопкою виходу -->
-        <header class="bg-white px-5 shadow-sm flex justify-between items-center z-20 border-b border-slate-100 shrink-0">
+        <header class="bg-white px-5 shadow-sm flex justify-between items-center z-20 border-b border-slate-100 shrink-0 transition-all">
             <div>
                 <h1 class="font-bold text-xl text-brand flex items-center gap-2">HappyFoot <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span></h1>
                 <p class="text-xs text-slate-400 font-medium" id="current-date">Завантаження...</p>
@@ -238,17 +247,34 @@
         let currentAppointments = [];
         let specialistsData = [];
 
-        // Функція входу (PIN 1111)
+        // Прив'язуємо функцію входу до вікна
         window.checkPin = function() {
             const pin = document.getElementById('pin-input').value;
             if(pin === '1111') {
-                document.getElementById('login-screen').classList.remove('active');
+                // Приховуємо екран входу
+                const loginScreen = document.getElementById('login-screen');
+                loginScreen.classList.remove('active');
+                loginScreen.style.display = 'none'; // Жорстке приховування
+                
+                // Показуємо дешборд
+                const dashboard = document.getElementById('dashboard-screen');
+                dashboard.classList.add('active');
+                dashboard.style.display = 'flex'; // Жорстке відображення
+                
                 initApp();
             } else { 
                 alert('Невірний PIN! Спробуйте ще раз.'); 
                 document.getElementById('pin-input').value = ''; 
             }
         }
+        
+        // Додаємо слухач подій для кнопки входу (щоб точно спрацювало)
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginBtn = document.getElementById('login-btn');
+            if(loginBtn) {
+                loginBtn.addEventListener('click', window.checkPin);
+            }
+        });
 
         function initApp() {
             setupAppointments();
@@ -294,37 +320,34 @@
                     const id = docSnap.id;
                     currentAppointments.push({ id, ...data });
 
-                    // Показуємо тільки актуальні записи (або всі, за бажанням)
-                    // if(data.date >= new Date().toISOString().split('T')[0]) {
-                        const el = document.createElement('div');
-                        
-                        let statusClass = data.status === 'confirmed' ? 'border-green-500' : 'border-[#04273b]';
-                        let statusBg = data.status === 'confirmed' ? 'bg-green-50' : 'bg-white';
-                        let badge = data.status === 'confirmed' 
-                            ? '<span class="bg-green-100 text-green-800 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1"><span class="material-icons-round text-[10px]">check</span> OK</span>' 
-                            : '<span class="bg-sky-100 text-sky-800 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1"><span class="material-icons-round text-[10px]">schedule</span> NEW</span>';
-                        
-                        el.className = `p-4 rounded-xl shadow-sm border-l-[6px] ${statusClass} ${statusBg} mb-3 cursor-pointer active:scale-95 transition-transform relative overflow-hidden`;
-                        el.onclick = () => openDetails(id);
-                        
-                        el.innerHTML = `
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center font-bold text-slate-500 text-lg shadow-sm">${data.name ? data.name[0].toUpperCase() : '?'}</div>
-                                    <div>
-                                        <h4 class="font-bold text-slate-800 leading-none text-base">${data.name || 'Клієнт'}</h4>
-                                        <div class="text-xs text-slate-500 mt-1 font-mono bg-slate-100 px-2 py-0.5 rounded inline-block">📅 ${data.date} • ${data.time}</div>
-                                    </div>
+                    const el = document.createElement('div');
+                    
+                    let statusClass = data.status === 'confirmed' ? 'border-green-500' : 'border-[#04273b]';
+                    let statusBg = data.status === 'confirmed' ? 'bg-green-50' : 'bg-white';
+                    let badge = data.status === 'confirmed' 
+                        ? '<span class="bg-green-100 text-green-800 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1"><span class="material-icons-round text-[10px]">check</span> OK</span>' 
+                        : '<span class="bg-sky-100 text-sky-800 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1"><span class="material-icons-round text-[10px]">schedule</span> NEW</span>';
+                    
+                    el.className = `p-4 rounded-xl shadow-sm border-l-[6px] ${statusClass} ${statusBg} mb-3 cursor-pointer active:scale-95 transition-transform relative overflow-hidden`;
+                    el.onclick = () => openDetails(id);
+                    
+                    el.innerHTML = `
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center font-bold text-slate-500 text-lg shadow-sm">${data.name ? data.name[0].toUpperCase() : '?'}</div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 leading-none text-base">${data.name || 'Клієнт'}</h4>
+                                    <div class="text-xs text-slate-500 mt-1 font-mono bg-slate-100 px-2 py-0.5 rounded inline-block">📅 ${data.date} • ${data.time}</div>
                                 </div>
-                                ${badge}
                             </div>
-                            <div class="bg-white/50 border border-slate-100 p-2 rounded-lg text-xs text-slate-600 flex justify-between items-center">
-                                <span class="font-bold text-brand truncate max-w-[120px]">💅 ${data.serviceName || 'Послуга'}</span>
-                                <span class="flex items-center gap-1 text-slate-400"><span class="material-icons-round text-[12px]">person</span> ${data.specialistName || 'Будь-хто'}</span>
-                            </div>
-                        `;
-                        list.appendChild(el);
-                    // }
+                            ${badge}
+                        </div>
+                        <div class="bg-white/50 border border-slate-100 p-2 rounded-lg text-xs text-slate-600 flex justify-between items-center">
+                            <span class="font-bold text-brand truncate max-w-[120px]">💅 ${data.serviceName || 'Послуга'}</span>
+                            <span class="flex items-center gap-1 text-slate-400"><span class="material-icons-round text-[12px]">person</span> ${data.specialistName || 'Будь-хто'}</span>
+                        </div>
+                    `;
+                    list.appendChild(el);
                 });
             });
         }
