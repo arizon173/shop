@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>HappyFoot Admin</title>
     
     <!-- React & ReactDOM -->
@@ -19,54 +19,94 @@
     <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
         
         :root {
-            --primary: #04273b;
-            --primary-hover: #063d5e;
-            --accent-light: #E0F2FE;
-            --bg: #F5F7FA;
-            --safe-top: 60px; /* ~1.5cm visual safe area */
+            --primary: #0f172a;
+            --primary-light: #334155;
+            --accent: #0ea5e9; /* Sky 500 */
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --safe-top: 85px; /* Збільшив відступ як просили */
+            --nav-height: 80px;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Manrope', sans-serif;
             background-color: var(--bg);
-            color: #1e293b;
+            color: var(--primary);
             -webkit-tap-highlight-color: transparent;
-            overscroll-behavior-y: none; /* Prevent pull-to-refresh on mobile */
+            overscroll-behavior-y: none;
         }
 
-        /* Hide Scrollbar but keep functionality */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        /* Smooth scroll & hide scrollbar */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        
+        .safe-top-padding { padding-top: var(--safe-top); }
+        .pb-nav { padding-bottom: calc(var(--nav-height) + 20px); }
 
-        .safe-top-padding {
-            padding-top: var(--safe-top);
-        }
-
+        /* Modern Glass Effect */
         .glass-nav {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(0,0,0,0.05);
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.03);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.04);
         }
 
-        .card-shadow {
-            box-shadow: 0 4px 15px rgba(4, 39, 59, 0.05);
+        .glass-header {
+            background: rgba(248, 250, 252, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0,0,0,0.03);
+        }
+
+        /* Soft Shadows (Apple Style) */
+        .card-modern {
+            background: var(--surface);
+            border-radius: 24px;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.06);
+            border: 1px solid rgba(255,255,255,1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card-modern:active { transform: scale(0.98); }
+
+        /* Animated Checkbox */
+        .checkbox-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+        }
+        .checkmark-path {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            transition: stroke-dashoffset 0.4s ease-in-out;
+        }
+        .checked .checkmark-path {
+            stroke-dashoffset: 0;
         }
 
         /* Animations */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        @keyframes toastIn { from { transform: translateX(-50%) translateY(20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+        @keyframes toastOut { from { transform: translateX(-50%) translateY(0); opacity: 1; } to { transform: translateX(-50%) translateY(20px); opacity: 0; } }
+        
+        .toast-enter { animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .toast-exit { animation: toastOut 0.3s ease-in forwards; }
+
+        /* Status Badges */
+        .badge-new { background: #eff6ff; color: #3b82f6; border: 1px solid #dbeafe; }
+        .badge-confirmed { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        // --- CONFIGURATION & FIREBASE ---
+        /* --- CONFIGURATION --- */
         const firebaseConfig = {
             apiKey: "AIzaSyBzjaoG4jyD1pjBH9Z0XhL6ZzAp_WT4Ep4",
             authDomain: "happyfoot-lviv.firebaseapp.com",
@@ -77,196 +117,263 @@
             measurementId: "G-CCXGKHW5BR"
         };
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // --- ICONS COMPONENT WRAPPER ---
-        const Icon = ({ name, size = 20, color = "currentColor", className="" }) => {
-            const LucideIcon = window.lucide && window.lucide.icons ? window.lucide.icons[name] : null;
-            if (!LucideIcon) return null;
-            
-            // Render SVG manually since we are in a standalone script without Lucide React component
-            // Or simpler: use an effect to replace <i data-lucide="...">
-            // But for React within Babel standalone, we need to be clever or just use simple SVG paths or standard library if possible.
-            // WORKAROUND: We will use the library's createCreateElement if available, or just simple replacement.
-            // EASIER APPROACH for Standalone:
-            React.useEffect(() => {
-                lucide.createIcons();
-            });
-            return <i data-lucide={name.toLowerCase()} width={size} height={size} style={{color}} className={className}></i>;
+        /* --- ICONS --- */
+        const Icon = ({ name, size = 20, className="", ...props }) => {
+            React.useEffect(() => { if(window.lucide) window.lucide.createIcons(); });
+            return <i data-lucide={name.toLowerCase()} width={size} height={size} className={className} {...props}></i>;
         };
 
-        // --- UTILS ---
-        const HOURS_PRESET = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
+        /* --- UI COMPONENTS --- */
 
-        // --- COMPONENTS ---
+        // 1. ANIMATED CHECKBOX
+        const AnimatedCheckbox = ({ checked, onChange, size = 24 }) => (
+            <div 
+                className={`relative cursor-pointer transition-all duration-300 rounded-full flex items-center justify-center border-2 ${checked ? 'bg-sky-500 border-sky-500' : 'bg-transparent border-slate-300'}`} 
+                style={{width: size, height: size}}
+                onClick={onChange}
+            >
+                <svg className={`w-full h-full p-0.5 text-white ${checked ? 'checked' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" className="checkmark-path" />
+                </svg>
+            </div>
+        );
 
-        // 1. LOGIN SCREEN
+        // 2. TOAST NOTIFICATION SYSTEM
+        const ToastContext = React.createContext();
+
+        const ToastProvider = ({ children }) => {
+            const [toasts, setToasts] = React.useState([]);
+
+            const showToast = (message, type = 'success') => {
+                const id = Date.now();
+                setToasts(prev => [...prev, { id, message, type, exiting: false }]);
+                setTimeout(() => removeToast(id), 3000);
+            };
+
+            const removeToast = (id) => {
+                setToasts(prev => prev.map(t => t.id === id ? { ...t, exiting: true } : t));
+                setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 300);
+            };
+
+            return (
+                <ToastContext.Provider value={{ showToast }}>
+                    {children}
+                    <div className="fixed bottom-24 left-1/2 z-50 w-full max-w-xs pointer-events-none">
+                        {toasts.map(toast => (
+                            <div key={toast.id} className={`absolute bottom-0 left-1/2 w-full transform -translate-x-1/2 mb-2 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-md border border-white/20 ${toast.exiting ? 'toast-exit' : 'toast-enter'} ${toast.type === 'error' ? 'bg-red-500/90 text-white' : 'bg-slate-800/90 text-white'}`}>
+                                <div className={`p-1 rounded-full ${toast.type === 'error' ? 'bg-red-600' : 'bg-green-500'}`}>
+                                    {toast.type === 'error' ? <Icon name="AlertTriangle" size={14} color="white"/> : <Icon name="Check" size={14} color="white"/>}
+                                </div>
+                                <span className="font-semibold text-sm">{toast.message}</span>
+                            </div>
+                        ))}
+                    </div>
+                </ToastContext.Provider>
+            );
+        };
+
+        const useToast = () => React.useContext(ToastContext);
+
+        // --- SCREENS ---
+
+        // 1. LOGIN
         const LoginScreen = ({ onLogin }) => {
             const [pin, setPin] = React.useState("");
             const [error, setError] = React.useState(false);
 
             const handleAuth = () => {
-                if(pin === "0000") { // 🛑 CHANGE THIS PIN FOR REAL USE
-                    onLogin();
-                } else {
-                    setError(true);
-                    setPin("");
-                }
+                if(pin === "0000") onLogin();
+                else { setError(true); setPin(""); setTimeout(() => setError(false), 2000); }
             };
 
             return (
-                <div className="min-h-screen flex flex-col items-center justify-center bg-[#04273b] p-6 text-white">
-                    <div className="text-3xl font-bold mb-2">HappyFoot <span className="text-sky-400">Admin</span></div>
-                    <div className="text-sm text-sky-200/60 mb-8 uppercase tracking-widest">Панель керування</div>
-                    
-                    <input 
-                        type="password" 
-                        inputMode="numeric"
-                        value={pin}
-                        onChange={e => {setPin(e.target.value); setError(false);}}
-                        className="w-48 bg-white/10 text-center text-2xl tracking-[0.5em] py-3 rounded-xl border border-white/20 focus:outline-none focus:border-sky-400 transition-all mb-4"
-                        placeholder="••••"
-                        maxLength={4}
-                    />
-                    {error && <div className="text-red-400 text-sm mb-4">Невірний PIN-код</div>}
-                    
-                    <button onClick={handleAuth} className="bg-sky-500 hover:bg-sky-400 text-white font-bold py-3 px-12 rounded-full transition-all shadow-lg shadow-sky-500/20">
-                        Увійти
-                    </button>
+                <div className="min-h-screen flex flex-col items-center justify-center bg-slate-900 p-6 relative overflow-hidden">
+                    {/* Background decoration */}
+                    <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-sky-500/20 rounded-full blur-[80px]"></div>
+                    <div className="absolute bottom-[-10%] right-[-10%] w-64 h-64 bg-indigo-500/20 rounded-full blur-[80px]"></div>
+
+                    <div className="z-10 text-center w-full max-w-xs animate-slide-up">
+                        <div className="mb-8">
+                            <div className="w-20 h-20 bg-gradient-to-tr from-sky-400 to-indigo-500 rounded-3xl mx-auto flex items-center justify-center shadow-lg shadow-sky-500/30 mb-4">
+                                <Icon name="Lock" size={32} color="white" />
+                            </div>
+                            <h1 className="text-3xl font-bold text-white tracking-tight">Admin<span className="text-sky-400">Panel</span></h1>
+                            <p className="text-slate-400 text-sm mt-1">Введіть PIN-код для входу</p>
+                        </div>
+                        
+                        <div className="relative mb-6">
+                            <input 
+                                type="password" 
+                                inputMode="numeric"
+                                value={pin}
+                                onChange={e => {setPin(e.target.value); setError(false);}}
+                                className={`w-full bg-slate-800/50 text-center text-3xl tracking-[0.5em] py-5 rounded-2xl border transition-all outline-none text-white placeholder-slate-600 ${error ? 'border-red-500 animate-pulse' : 'border-slate-700 focus:border-sky-500'}`}
+                                placeholder="••••"
+                                maxLength={4}
+                            />
+                        </div>
+                        
+                        <button onClick={handleAuth} className="w-full bg-sky-500 hover:bg-sky-400 text-white font-bold py-4 rounded-2xl shadow-lg shadow-sky-500/25 transition-all active:scale-95">
+                            Увійти в систему
+                        </button>
+                    </div>
                 </div>
             );
         };
 
-        // 2. TABS CONTENT
-
-        // --- TAB: RECORDS (ЗАПИСИ) ---
+        // 2. TAB: RECORDS
         const TabRecords = () => {
             const [apps, setApps] = React.useState([]);
             const [loading, setLoading] = React.useState(true);
             const [editModal, setEditModal] = React.useState(null);
             const [specialists, setSpecialists] = React.useState([]);
+            const { showToast } = useToast();
 
             React.useEffect(() => {
-                // Fetch specialists for dropdown
-                db.collection("specialists").get().then(snap => {
-                    setSpecialists(snap.docs.map(d => ({id: d.id, ...d.data()})));
-                });
-
-                // Listen to appointments
-                const unsub = db.collection("appointments")
-                    .orderBy("date", "desc") // Temporary sort, we will sort properly in JS
-                    .onSnapshot(snap => {
-                        const data = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                        // Sort by Date then Time desc
-                        data.sort((a,b) => {
-                            if(a.date !== b.date) return new Date(a.date) - new Date(b.date);
-                            return a.time.localeCompare(b.time);
-                        });
-                        setApps(data);
-                        setLoading(false);
+                db.collection("specialists").get().then(snap => setSpecialists(snap.docs.map(d => ({id: d.id, ...d.data()}))));
+                const unsub = db.collection("appointments").orderBy("date", "desc").onSnapshot(snap => {
+                    const data = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                    data.sort((a,b) => {
+                        if(a.date !== b.date) return new Date(a.date) - new Date(b.date);
+                        return a.time.localeCompare(b.time);
                     });
+                    setApps(data);
+                    setLoading(false);
+                });
                 return () => unsub();
             }, []);
 
             const updateStatus = async (id, status) => {
                 await db.collection("appointments").doc(id).update({ status });
+                showToast(status === 'confirmed' ? "Запис підтверджено!" : "Статус оновлено");
             };
 
             const deleteApp = async (id) => {
                 if(confirm("Видалити цей запис безповоротно?")) {
                     await db.collection("appointments").doc(id).delete();
+                    showToast("Запис видалено", "error");
                 }
             };
 
             const saveEdit = async () => {
                 if(!editModal) return;
                 const specName = specialists.find(s => s.id === editModal.specialistId)?.name || "Не обрано";
-                
                 await db.collection("appointments").doc(editModal.id).update({
-                    date: editModal.date,
-                    time: editModal.time,
-                    specialistId: editModal.specialistId,
-                    specialistName: specName
+                    date: editModal.date, time: editModal.time, specialistId: editModal.specialistId, specialistName: specName
                 });
                 setEditModal(null);
+                showToast("Дані збережено");
             };
 
-            if(loading) return <div className="p-8 text-center text-gray-400">Завантаження...</div>;
+            if(loading) return <div className="p-10 text-center text-slate-400 animate-pulse">Завантаження даних...</div>;
 
             return (
-                <div className="pb-24 px-4 animate-fade-in safe-top-padding">
-                    <h2 className="text-2xl font-bold text-[#04273b] mb-6 pl-2 border-l-4 border-sky-400">Журнал записів</h2>
+                <div className="px-5 safe-top-padding pb-nav animate-slide-up">
+                    <header className="mb-6 flex justify-between items-end">
+                        <div>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Сьогодні: {new Date().toLocaleDateString('uk-UA')}</p>
+                            <h2 className="text-3xl font-extrabold text-slate-900">Записи</h2>
+                        </div>
+                        <div className="bg-white px-3 py-1.5 rounded-full shadow-sm border border-slate-100 text-xs font-bold text-slate-500">
+                            Всього: {apps.length}
+                        </div>
+                    </header>
                     
                     {apps.length === 0 ? (
-                        <div className="text-center py-10 text-gray-400">Записів немає</div>
+                        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                            <div className="bg-slate-100 p-6 rounded-full mb-4"><Icon name="Coffee" size={40} className="opacity-50"/></div>
+                            <p>Наразі записів немає</p>
+                        </div>
                     ) : (
-                        apps.map(app => (
-                            <div key={app.id} className="bg-white rounded-2xl p-4 mb-4 card-shadow border border-gray-100 relative overflow-hidden">
-                                {app.status === 'new' && <div className="absolute top-0 right-0 bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-bl-lg">НОВИЙ</div>}
-                                {app.status === 'confirmed' && <div className="absolute top-0 right-0 bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-bl-lg">ПІДТВЕРДЖЕНО</div>}
-                                
-                                <div className="flex justify-between items-start mb-2">
-                                    <div>
-                                        <div className="font-bold text-lg text-[#04273b]">{app.serviceName}</div>
-                                        <div className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                                            <Icon name="User" size={14}/> {app.name} 
-                                            <a href={`tel:${app.phone}`} className="text-sky-600 font-semibold ml-2">{app.phone}</a>
+                        <div className="space-y-4">
+                            {apps.map(app => (
+                                <div key={app.id} className="card-modern p-5 relative overflow-hidden group">
+                                    {/* Status Indicator Stripe */}
+                                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${app.status === 'confirmed' ? 'bg-green-500' : 'bg-sky-500'}`}></div>
+
+                                    <div className="flex justify-between items-start mb-3 pl-2">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                {app.status === 'new' ? (
+                                                    <span className="badge-new text-[10px] font-bold px-2 py-0.5 rounded-full">НОВИЙ</span>
+                                                ) : (
+                                                    <span className="badge-confirmed text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                        <Icon name="Check" size={10} strokeWidth={4}/> ПІДТВЕРДЖЕНО
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <h3 className="font-bold text-lg text-slate-800 leading-tight">{app.serviceName}</h3>
+                                        </div>
+                                        <div className="text-right bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
+                                            <div className="font-black text-xl text-slate-900">{app.time}</div>
+                                            <div className="text-[10px] font-bold text-slate-400 uppercase">{app.date}</div>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <div className="font-bold text-xl text-[#04273b]">{app.time}</div>
-                                        <div className="text-xs text-gray-400 font-semibold">{app.date}</div>
+
+                                    <div className="pl-2 mb-4">
+                                        <div className="flex items-center gap-2 text-sm text-slate-600 mb-1">
+                                            <Icon name="User" size={16} className="text-slate-400"/>
+                                            <span className="font-medium">{app.name}</span>
+                                            {app.phone && <a href={`tel:${app.phone}`} className="ml-auto text-sky-600 font-bold bg-sky-50 px-2 py-0.5 rounded-lg text-xs flex items-center gap-1"><Icon name="Phone" size={12}/> Подзвонити</a>}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-sm text-slate-500">
+                                            <Icon name="Stethoscope" size={16} className="text-slate-400"/>
+                                            <span>Майстер: <span className="text-slate-900 font-semibold">{app.specialistName}</span></span>
+                                        </div>
+                                    </div>
+
+                                    <div className="pl-2 pt-3 border-t border-slate-100 flex gap-3">
+                                        {app.status !== 'confirmed' ? (
+                                            <button onClick={() => updateStatus(app.id, 'confirmed')} className="flex-1 bg-slate-900 text-white py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-slate-900/10 flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                                                Підтвердити
+                                            </button>
+                                        ) : (
+                                            <button onClick={() => updateStatus(app.id, 'new')} className="flex-1 bg-slate-100 text-slate-600 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                                                <Icon name="RotateCcw" size={16}/> Повернути
+                                            </button>
+                                        )}
+                                        <button onClick={() => setEditModal(app)} className="w-10 h-10 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center border border-slate-200 active:scale-95 transition-transform">
+                                            <Icon name="Edit2" size={18}/>
+                                        </button>
+                                        <button onClick={() => deleteApp(app.id)} className="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center border border-red-100 active:scale-95 transition-transform">
+                                            <Icon name="Trash2" size={18}/>
+                                        </button>
                                     </div>
                                 </div>
-
-                                <div className="bg-gray-50 rounded-lg p-2 mb-3 text-xs text-gray-600 flex justify-between items-center">
-                                    <span>Майстер: <b>{app.specialistName}</b></span>
-                                    <button onClick={() => setEditModal(app)} className="text-sky-600 font-bold px-2">Ред.</button>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-2">
-                                    {app.status !== 'confirmed' && (
-                                        <button onClick={() => updateStatus(app.id, 'confirmed')} className="bg-[#04273b] text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
-                                            <Icon name="Check" size={16}/> Підтвердити
-                                        </button>
-                                    )}
-                                    {app.status === 'confirmed' && (
-                                        <button onClick={() => updateStatus(app.id, 'new')} className="bg-gray-200 text-gray-600 py-2 rounded-xl text-sm font-semibold">
-                                            Скасувати підтв.
-                                        </button>
-                                    )}
-                                    <button onClick={() => deleteApp(app.id)} className="bg-red-50 text-red-500 py-2 rounded-xl text-sm font-semibold border border-red-100">
-                                        Видалити
-                                    </button>
-                                </div>
-                            </div>
-                        ))
+                            ))}
+                        </div>
                     )}
 
                     {/* EDIT MODAL */}
                     {editModal && (
-                        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                            <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-fade-in">
-                                <h3 className="font-bold text-lg mb-4">Редагування запису</h3>
+                        <div className="fixed inset-0 z-[60] bg-slate-900/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+                            <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up">
+                                <h3 className="font-bold text-xl mb-6 text-slate-800">Редагування</h3>
                                 
-                                <label className="text-xs font-bold text-gray-400 uppercase">Дата</label>
-                                <input type="date" value={editModal.date} onChange={e => setEditModal({...editModal, date: e.target.value})} className="w-full bg-gray-50 p-3 rounded-xl mb-3 border border-gray-200"/>
+                                <div className="space-y-4 mb-8">
+                                    <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Дата та Час</label>
+                                        <div className="flex gap-2">
+                                            <input type="date" value={editModal.date} onChange={e => setEditModal({...editModal, date: e.target.value})} className="w-full bg-white p-2 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:border-sky-500"/>
+                                            <input type="time" value={editModal.time} onChange={e => setEditModal({...editModal, time: e.target.value})} className="w-24 bg-white p-2 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:border-sky-500"/>
+                                        </div>
+                                    </div>
 
-                                <label className="text-xs font-bold text-gray-400 uppercase">Час</label>
-                                <input type="time" value={editModal.time} onChange={e => setEditModal({...editModal, time: e.target.value})} className="w-full bg-gray-50 p-3 rounded-xl mb-3 border border-gray-200"/>
-
-                                <label className="text-xs font-bold text-gray-400 uppercase">Спеціаліст</label>
-                                <select value={editModal.specialistId || ""} onChange={e => setEditModal({...editModal, specialistId: e.target.value})} className="w-full bg-gray-50 p-3 rounded-xl mb-6 border border-gray-200">
-                                    <option value="">Не обрано</option>
-                                    {specialists.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                </select>
+                                    <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Спеціаліст</label>
+                                        <select value={editModal.specialistId || ""} onChange={e => setEditModal({...editModal, specialistId: e.target.value})} className="w-full bg-white p-3 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:border-sky-500 appearance-none">
+                                            <option value="">Не обрано</option>
+                                            {specialists.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
 
                                 <div className="flex gap-3">
-                                    <button onClick={saveEdit} className="flex-1 bg-[#04273b] text-white py-3 rounded-xl font-bold">Зберегти</button>
-                                    <button onClick={() => setEditModal(null)} className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold">Закрити</button>
+                                    <button onClick={saveEdit} className="flex-1 bg-sky-500 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-sky-500/20 active:scale-95 transition-transform">Зберегти</button>
+                                    <button onClick={() => setEditModal(null)} className="flex-1 bg-slate-100 text-slate-600 py-3.5 rounded-xl font-bold text-sm active:scale-95 transition-transform">Скасувати</button>
                                 </div>
                             </div>
                         </div>
@@ -275,101 +382,103 @@
             );
         };
 
-        // --- TAB: STAFF (ПРАЦІВНИКИ) ---
+        // 3. TAB: STAFF
+        const HOURS_PRESET = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
+
         const TabStaff = () => {
             const [staff, setStaff] = React.useState([]);
             const [isEditing, setIsEditing] = React.useState(false);
             const [formData, setFormData] = React.useState({ name: '', role: '', hours: [] });
+            const { showToast } = useToast();
 
-            React.useEffect(() => {
-                const unsub = db.collection("specialists").onSnapshot(snap => {
-                    setStaff(snap.docs.map(d => ({id: d.id, ...d.data()})));
-                });
-                return () => unsub();
-            }, []);
+            React.useEffect(() => db.collection("specialists").onSnapshot(snap => setStaff(snap.docs.map(d => ({id: d.id, ...d.data()})))) , []);
 
             const toggleHour = (h) => {
                 const current = formData.hours || [];
-                if(current.includes(h)) {
-                    setFormData({...formData, hours: current.filter(x => x !== h)});
-                } else {
-                    setFormData({...formData, hours: [...current, h].sort()});
-                }
+                setFormData({...formData, hours: current.includes(h) ? current.filter(x => x !== h) : [...current, h].sort()});
             };
 
             const handleSubmit = async () => {
-                if(!formData.name) return alert("Введіть ім'я");
-                
-                if(formData.id) {
-                    await db.collection("specialists").doc(formData.id).update(formData);
-                } else {
-                    await db.collection("specialists").add(formData);
-                }
+                if(!formData.name) return showToast("Введіть ім'я", "error");
+                await (formData.id ? db.collection("specialists").doc(formData.id).update(formData) : db.collection("specialists").add(formData));
                 setIsEditing(false);
                 setFormData({ name: '', role: '', hours: [] });
+                showToast("Працівника збережено");
             };
 
             const deleteStaff = async (id) => {
-                if(confirm("Видалити цього працівника?")) {
+                if(confirm("Видалити працівника?")) {
                     await db.collection("specialists").doc(id).delete();
+                    showToast("Працівника видалено");
                 }
             };
 
             return (
-                <div className="pb-24 px-4 animate-fade-in safe-top-padding">
-                     <div className="flex justify-between items-center mb-6 pl-2 border-l-4 border-sky-400">
-                        <h2 className="text-2xl font-bold text-[#04273b]">Працівники</h2>
-                        <button onClick={() => { setFormData({ name: '', role: '', hours: [] }); setIsEditing(true); }} className="bg-[#04273b] text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform">
-                            <Icon name="Plus" size={24}/>
+                <div className="px-5 safe-top-padding pb-nav animate-slide-up">
+                    <header className="mb-6 flex justify-between items-center">
+                        <h2 className="text-3xl font-extrabold text-slate-900">Команда</h2>
+                        <button onClick={() => { setFormData({ name: '', role: '', hours: [] }); setIsEditing(true); }} className="bg-sky-500 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-sky-500/30 active:scale-90 transition-transform">
+                            <Icon name="Plus" size={26} strokeWidth={3}/>
                         </button>
+                    </header>
+
+                    <div className="grid gap-4">
+                        {staff.map(s => (
+                            <div key={s.id} onClick={() => { setFormData(s); setIsEditing(true); }} className="card-modern p-4 flex items-center gap-4 cursor-pointer active:scale-98">
+                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center font-bold text-slate-500 text-xl shadow-inner">
+                                    {s.name[0]}
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="font-bold text-slate-900 text-lg leading-tight">{s.name}</h3>
+                                    <p className="text-xs font-semibold text-slate-400">{s.role}</p>
+                                </div>
+                                <div className="bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 flex flex-col items-center">
+                                    <span className="font-black text-sky-600 text-lg leading-none">{(s.hours || []).length}</span>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase">Год.</span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
 
-                    {staff.map(s => (
-                        <div key={s.id} onClick={() => { setFormData(s); setIsEditing(true); }} className="bg-white rounded-2xl p-4 mb-3 card-shadow border border-gray-100 flex items-center gap-4 cursor-pointer active:bg-gray-50 transition-colors">
-                            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-500 text-lg">
-                                {s.name[0]}
-                            </div>
-                            <div className="flex-1">
-                                <div className="font-bold text-[#04273b]">{s.name}</div>
-                                <div className="text-xs text-gray-500">{s.role}</div>
-                            </div>
-                            <div className="text-xs font-bold text-sky-600 bg-sky-50 px-2 py-1 rounded-md">
-                                {(s.hours || []).length} год.
-                            </div>
-                        </div>
-                    ))}
-
                     {isEditing && (
-                        <div className="fixed inset-0 z-50 bg-white overflow-y-auto safe-top-padding">
-                            <div className="p-4">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="text-xl font-bold">{formData.id ? 'Редагувати' : 'Додати'} працівника</h3>
-                                    <button onClick={() => setIsEditing(false)} className="bg-gray-100 p-2 rounded-full"><Icon name="X" size={20}/></button>
+                        <div className="fixed inset-0 z-[60] bg-white safe-top-padding overflow-y-auto animate-slide-up">
+                            <div className="p-5 min-h-screen pb-20">
+                                <div className="flex justify-between items-center mb-8">
+                                    <h3 className="text-2xl font-extrabold text-slate-900">{formData.id ? 'Редагувати' : 'Новий'} майстер</h3>
+                                    <button onClick={() => setIsEditing(false)} className="bg-slate-100 p-2 rounded-full"><Icon name="X" size={24} className="text-slate-600"/></button>
                                 </div>
 
-                                <div className="space-y-4">
-                                    <input placeholder="ПІБ" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-gray-50 p-4 rounded-xl border border-gray-200 outline-none focus:border-sky-400 font-bold"/>
-                                    <input placeholder="Посада (нап. Подолог)" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full bg-gray-50 p-4 rounded-xl border border-gray-200 outline-none focus:border-sky-400"/>
+                                <div className="space-y-6">
+                                    <div className="space-y-4">
+                                        <input placeholder="ПІБ" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 p-4 rounded-2xl border-2 border-transparent focus:border-sky-500 focus:bg-white outline-none font-bold text-lg transition-colors placeholder-slate-400"/>
+                                        <input placeholder="Посада (нап. Подолог)" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full bg-slate-50 p-4 rounded-2xl border-2 border-transparent focus:border-sky-500 focus:bg-white outline-none font-semibold transition-colors placeholder-slate-400"/>
+                                    </div>
                                     
-                                    <div>
-                                        <div className="text-sm font-bold text-gray-400 mb-2 uppercase">Робочі години</div>
-                                        <div className="grid grid-cols-4 gap-2">
-                                            {HOURS_PRESET.map(h => (
-                                                <button key={h} onClick={() => toggleHour(h)} 
-                                                    className={`py-2 rounded-lg text-sm font-semibold transition-colors ${formData.hours?.includes(h) ? 'bg-[#04273b] text-white' : 'bg-gray-100 text-gray-500'}`}>
-                                                    {h}
-                                                </button>
-                                            ))}
+                                    <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <Icon name="Clock" size={18} className="text-sky-500"/>
+                                            <span className="text-sm font-bold text-slate-900 uppercase tracking-wide">Робочі години</span>
+                                        </div>
+                                        <div className="grid grid-cols-4 gap-3">
+                                            {HOURS_PRESET.map(h => {
+                                                const isSelected = formData.hours?.includes(h);
+                                                return (
+                                                    <div key={h} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border transition-all cursor-pointer ${isSelected ? 'bg-sky-500 border-sky-500 shadow-md shadow-sky-500/20' : 'bg-white border-slate-200'}`} onClick={() => toggleHour(h)}>
+                                                        <span className={`text-xs font-bold mb-1 ${isSelected ? 'text-white' : 'text-slate-600'}`}>{h}</span>
+                                                        <AnimatedCheckbox checked={isSelected} size={20} onChange={() => {}} />
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
 
-                                    <div className="pt-4 flex gap-3">
-                                        <button onClick={handleSubmit} className="flex-1 bg-[#04273b] text-white py-4 rounded-xl font-bold shadow-lg shadow-sky-900/20">
+                                    <div className="flex gap-4 pt-4">
+                                        <button onClick={handleSubmit} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-bold text-lg shadow-xl shadow-slate-900/20 active:scale-95 transition-transform">
                                             Зберегти
                                         </button>
                                         {formData.id && (
-                                            <button onClick={() => { deleteStaff(formData.id); setIsEditing(false); }} className="px-4 bg-red-50 text-red-500 rounded-xl font-bold">
-                                                <Icon name="Trash2" size={20}/>
+                                            <button onClick={() => { deleteStaff(formData.id); setIsEditing(false); }} className="px-5 bg-red-50 text-red-500 rounded-2xl border border-red-100 active:scale-95 transition-transform">
+                                                <Icon name="Trash2" size={24}/>
                                             </button>
                                         )}
                                     </div>
@@ -381,17 +490,17 @@
             )
         };
 
-        // --- TAB: SERVICES (ПОСЛУГИ) ---
+        // 4. TAB: SERVICES
         const TabServices = () => {
             const [categories, setCategories] = React.useState({});
             const [selectedCatId, setSelectedCatId] = React.useState(null);
             const [isEditingItem, setIsEditingItem] = React.useState(false);
             const [itemData, setItemData] = React.useState({ name: '', price: '', desc: '' });
+            const { showToast } = useToast();
 
             React.useEffect(() => {
                 const unsub = db.collection("services").onSnapshot(snap => {
-                    const data = {};
-                    snap.forEach(d => data[d.id] = {id: d.id, ...d.data()});
+                    const data = {}; snap.forEach(d => data[d.id] = {id: d.id, ...d.data()});
                     setCategories(data);
                     if(!selectedCatId && Object.keys(data).length > 0) setSelectedCatId(Object.keys(data)[0]);
                 });
@@ -400,87 +509,70 @@
 
             const handleSaveItem = async () => {
                 if(!itemData.name || !selectedCatId) return;
-                
                 const catData = categories[selectedCatId];
                 let newItems = [...(catData.items || [])];
-
-                if(itemData._index !== undefined) {
-                    // Edit existing
-                    newItems[itemData._index] = { name: itemData.name, price: itemData.price, desc: itemData.desc };
-                } else {
-                    // Add new
-                    newItems.push({ name: itemData.name, price: itemData.price, desc: itemData.desc });
-                }
-
+                itemData._index !== undefined ? newItems[itemData._index] = { ...itemData, _index: undefined } : newItems.push({ name: itemData.name, price: itemData.price, desc: itemData.desc });
+                
                 await db.collection("services").doc(selectedCatId).update({ items: newItems });
-                setIsEditingItem(false);
-                setItemData({ name: '', price: '', desc: '' });
+                setIsEditingItem(false); setItemData({ name: '', price: '', desc: '' });
+                showToast("Послугу збережено");
             };
 
             const deleteItem = async (index) => {
-                if(!confirm("Видалити послугу?")) return;
+                if(!confirm("Видалити?")) return;
                 const catData = categories[selectedCatId];
-                const newItems = catData.items.filter((_, i) => i !== index);
-                await db.collection("services").doc(selectedCatId).update({ items: newItems });
+                await db.collection("services").doc(selectedCatId).update({ items: catData.items.filter((_, i) => i !== index) });
+                setIsEditingItem(false);
+                showToast("Послугу видалено");
             };
 
             const currentCat = categories[selectedCatId];
 
             return (
-                <div className="pb-24 px-4 animate-fade-in safe-top-padding">
-                    <h2 className="text-2xl font-bold text-[#04273b] mb-4 pl-2 border-l-4 border-sky-400">Послуги</h2>
+                <div className="px-5 safe-top-padding pb-nav animate-slide-up">
+                    <h2 className="text-3xl font-extrabold text-slate-900 mb-6">Послуги</h2>
                     
-                    {/* Category Tabs */}
-                    <div className="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar">
+                    {/* Chips */}
+                    <div className="flex gap-3 overflow-x-auto pb-6 -mx-5 px-5 no-scrollbar">
                         {Object.values(categories).map(cat => (
                             <button key={cat.id} onClick={() => setSelectedCatId(cat.id)}
-                                className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-bold transition-all ${selectedCatId === cat.id ? 'bg-[#04273b] text-white shadow-lg' : 'bg-white text-gray-500 border border-gray-200'}`}>
+                                className={`whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-bold transition-all shadow-sm ${selectedCatId === cat.id ? 'bg-slate-900 text-white shadow-slate-900/20' : 'bg-white text-slate-500 border border-slate-200'}`}>
                                 {cat.icon} {cat.title}
                             </button>
                         ))}
                     </div>
 
-                    {/* Items List */}
                     {currentCat && (
-                        <div>
-                            <button onClick={() => { setItemData({name:'', price:'', desc:''}); setIsEditingItem(true); }} className="w-full py-3 border-2 border-dashed border-sky-200 text-sky-600 rounded-xl font-bold mb-4 flex items-center justify-center gap-2 hover:bg-sky-50 transition-colors">
-                                <Icon name="Plus" size={18}/> Додати послугу
+                        <div className="space-y-4">
+                            <button onClick={() => { setItemData({name:'', price:'', desc:''}); setIsEditingItem(true); }} className="w-full py-4 border-2 border-dashed border-slate-300 text-slate-400 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-50 hover:border-slate-400 transition-all active:scale-98">
+                                <Icon name="Plus" size={20}/> Додати нову послугу
                             </button>
 
-                            <div className="space-y-3">
-                                {(currentCat.items || []).map((item, idx) => (
-                                    <div key={idx} onClick={() => { setItemData({...item, _index: idx}); setIsEditingItem(true); }} className="bg-white p-4 rounded-xl border border-gray-100 card-shadow flex justify-between items-center active:bg-gray-50">
-                                        <div>
-                                            <div className="font-bold text-[#04273b]">{item.name}</div>
-                                            <div className="text-xs text-gray-400 mt-1 max-w-[200px] truncate">{item.desc}</div>
-                                        </div>
-                                        <div className="font-bold text-sky-600 bg-sky-50 px-2 py-1 rounded-lg text-sm">{item.price}</div>
+                            {(currentCat.items || []).map((item, idx) => (
+                                <div key={idx} onClick={() => { setItemData({...item, _index: idx}); setIsEditingItem(true); }} className="card-modern p-5 flex justify-between items-center active:scale-98 cursor-pointer">
+                                    <div className="flex-1 pr-4">
+                                        <div className="font-bold text-slate-900 text-lg mb-1">{item.name}</div>
+                                        <div className="text-xs font-medium text-slate-400 line-clamp-2 leading-relaxed">{item.desc}</div>
                                     </div>
-                                ))}
-                            </div>
+                                    <div className="font-bold text-sky-600 bg-sky-50 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap">{item.price}</div>
+                                </div>
+                            ))}
                         </div>
                     )}
 
-                    {/* Edit Modal */}
                     {isEditingItem && (
-                        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center">
-                            <div className="bg-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-fade-in">
-                                <h3 className="font-bold text-lg mb-4">{itemData._index !== undefined ? 'Редагувати' : 'Нова'} послуга</h3>
-                                
-                                <input placeholder="Назва" value={itemData.name} onChange={e => setItemData({...itemData, name: e.target.value})} className="w-full bg-gray-50 p-3 rounded-xl mb-3 border border-gray-200 font-bold outline-none focus:border-sky-400"/>
-                                <input placeholder="Ціна (нап. 1000 ₴)" value={itemData.price} onChange={e => setItemData({...itemData, price: e.target.value})} className="w-full bg-gray-50 p-3 rounded-xl mb-3 border border-gray-200 outline-none focus:border-sky-400"/>
-                                <textarea placeholder="Опис" value={itemData.desc} onChange={e => setItemData({...itemData, desc: e.target.value})} className="w-full bg-gray-50 p-3 rounded-xl mb-4 border border-gray-200 h-24 resize-none outline-none focus:border-sky-400"></textarea>
-
+                        <div className="fixed inset-0 z-[60] bg-slate-900/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+                            <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up">
+                                <h3 className="font-bold text-xl mb-6 text-slate-900">{itemData._index !== undefined ? 'Редагувати' : 'Нова'} послуга</h3>
+                                <div className="space-y-3 mb-6">
+                                    <input placeholder="Назва послуги" value={itemData.name} onChange={e => setItemData({...itemData, name: e.target.value})} className="w-full bg-slate-50 p-4 rounded-xl border border-slate-100 font-bold outline-none focus:border-sky-500 focus:bg-white"/>
+                                    <input placeholder="Ціна (нап. 1000 ₴)" value={itemData.price} onChange={e => setItemData({...itemData, price: e.target.value})} className="w-full bg-slate-50 p-4 rounded-xl border border-slate-100 outline-none focus:border-sky-500 focus:bg-white font-semibold"/>
+                                    <textarea placeholder="Короткий опис" value={itemData.desc} onChange={e => setItemData({...itemData, desc: e.target.value})} className="w-full bg-slate-50 p-4 rounded-xl border border-slate-100 h-24 resize-none outline-none focus:border-sky-500 focus:bg-white text-sm"></textarea>
+                                </div>
                                 <div className="flex gap-3">
-                                    <button onClick={handleSaveItem} className="flex-1 bg-[#04273b] text-white py-3 rounded-xl font-bold">Зберегти</button>
-                                    {itemData._index !== undefined && (
-                                        <button onClick={() => { deleteItem(itemData._index); setIsEditingItem(false); }} className="px-4 bg-red-100 text-red-500 rounded-xl">
-                                            <Icon name="Trash2" size={20}/>
-                                        </button>
-                                    )}
-                                    <button onClick={() => setIsEditingItem(false)} className="px-4 bg-gray-100 text-gray-500 rounded-xl">
-                                        <Icon name="X" size={20}/>
-                                    </button>
+                                    <button onClick={handleSaveItem} className="flex-1 bg-slate-900 text-white py-3.5 rounded-xl font-bold shadow-lg active:scale-95 transition-transform">Зберегти</button>
+                                    {itemData._index !== undefined && <button onClick={() => deleteItem(itemData._index)} className="px-5 bg-red-50 text-red-500 rounded-xl border border-red-100 active:scale-95"><Icon name="Trash2" size={20}/></button>}
+                                    <button onClick={() => setIsEditingItem(false)} className="px-5 bg-slate-100 text-slate-500 rounded-xl active:scale-95"><Icon name="X" size={20}/></button>
                                 </div>
                             </div>
                         </div>
@@ -489,57 +581,42 @@
             )
         };
 
-        // --- MAIN APP COMPONENT ---
+        // --- MAIN APP ---
         const App = () => {
             const [isAuthenticated, setIsAuthenticated] = React.useState(false);
-            const [activeTab, setActiveTab] = React.useState('records'); // records, staff, services
+            const [activeTab, setActiveTab] = React.useState('records');
 
-            // Check session storage for "persisted" login during refresh
             React.useEffect(() => {
-                if(sessionStorage.getItem('admin_auth') === 'true') {
-                    setIsAuthenticated(true);
-                }
-                // Trigger icon replacement
-                setTimeout(() => lucide.createIcons(), 100);
-            }, [activeTab]);
+                if(sessionStorage.getItem('admin_auth') === 'true') setIsAuthenticated(true);
+            }, []);
 
-            const handleLogin = () => {
-                sessionStorage.setItem('admin_auth', 'true');
-                setIsAuthenticated(true);
-            };
+            const handleLogin = () => { sessionStorage.setItem('admin_auth', 'true'); setIsAuthenticated(true); };
 
-            if (!isAuthenticated) {
-                return <LoginScreen onLogin={handleLogin} />;
-            }
+            if (!isAuthenticated) return <LoginScreen onLogin={handleLogin} />;
 
             return (
-                <div className="min-h-screen relative max-w-[600px] mx-auto bg-[#F5F7FA]">
-                    
-                    {/* CONTENT */}
-                    <div className="min-h-screen">
+                <ToastProvider>
+                    <div className="min-h-screen relative max-w-[600px] mx-auto bg-[#F8FAFC]">
                         {activeTab === 'records' && <TabRecords />}
                         {activeTab === 'staff' && <TabStaff />}
                         {activeTab === 'services' && <TabServices />}
-                    </div>
 
-                    {/* BOTTOM NAV */}
-                    <nav className="fixed bottom-0 left-0 right-0 glass-nav pb-safe-bottom z-40 max-w-[600px] mx-auto">
-                        <div className="flex justify-around items-center p-2 pb-6">
-                            <button onClick={() => setActiveTab('records')} className={`flex flex-col items-center p-2 transition-all ${activeTab === 'records' ? 'text-[#04273b] scale-110' : 'text-gray-400'}`}>
-                                <Icon name="Calendar" size={24} />
-                                <span className="text-[10px] font-bold mt-1">Записи</span>
-                            </button>
-                            <button onClick={() => setActiveTab('staff')} className={`flex flex-col items-center p-2 transition-all ${activeTab === 'staff' ? 'text-[#04273b] scale-110' : 'text-gray-400'}`}>
-                                <Icon name="Users" size={24} />
-                                <span className="text-[10px] font-bold mt-1">Штат</span>
-                            </button>
-                            <button onClick={() => setActiveTab('services')} className={`flex flex-col items-center p-2 transition-all ${activeTab === 'services' ? 'text-[#04273b] scale-110' : 'text-gray-400'}`}>
-                                <Icon name="Briefcase" size={24} />
-                                <span className="text-[10px] font-bold mt-1">Послуги</span>
-                            </button>
-                        </div>
-                    </nav>
-                </div>
+                        <nav className="fixed bottom-0 left-0 right-0 glass-nav pb-6 pt-2 z-40 max-w-[600px] mx-auto">
+                            <div className="flex justify-around items-center px-2">
+                                {[
+                                    {id:'records', icon:'Calendar', label:'Записи'},
+                                    {id:'staff', icon:'Users', label:'Команда'},
+                                    {id:'services', icon:'Briefcase', label:'Послуги'}
+                                ].map(tab => (
+                                    <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex flex-col items-center p-3 w-20 rounded-2xl transition-all duration-300 ${activeTab === tab.id ? 'text-sky-600 bg-sky-50 scale-105' : 'text-slate-400 hover:bg-slate-50'}`}>
+                                        <Icon name={tab.icon} size={24} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+                                        <span className="text-[10px] font-bold mt-1.5">{tab.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </nav>
+                    </div>
+                </ToastProvider>
             );
         };
 
