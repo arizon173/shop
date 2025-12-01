@@ -2,6 +2,7 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
+    <!-- ВАЖЛИВО: viewport-fit=cover для повного екрану -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>HappyFoot Admin</title>
     
@@ -63,7 +64,7 @@
         
         /* --- ГОЛОВНЕ ВИПРАВЛЕННЯ: ВІДСТУП ШАПКИ --- */
         header {
-            /* Опускаємо шапку на 80px нижче безпечної зони. Це гарантовано нижче кнопок TG */
+            /* Опускаємо шапку нижче, щоб не налізала на кнопки TG */
             padding-top: calc(var(--safe-top) + 80px) !important; 
             padding-bottom: 1.5rem;
         }
@@ -90,23 +91,28 @@
     <!-- === 1. ЕКРАН ВХОДУ === -->
     <div id="login-screen" class="screen active items-center justify-center p-6 text-white">
         <div class="flex flex-col items-center w-full max-w-sm">
-            <div class="mb-12 text-center">
+            <div class="mb-8 text-center">
                 <div class="text-5xl font-extrabold mb-2 tracking-tight">Happy<span class="text-sky-400">Foot</span></div>
                 <div class="text-[10px] opacity-50 tracking-[0.5em] uppercase font-bold">Admin Control</div>
             </div>
+            
+            <!-- Status Message for Debugging -->
+            <div id="system-status" class="mb-4 text-xs font-mono bg-black/20 p-2 rounded text-center hidden">Завантаження системи...</div>
+
             <div class="w-full bg-white/5 backdrop-blur-xl p-8 rounded-3xl border border-white/10 shadow-2xl">
                 <input type="password" id="pin-input" placeholder="••••" maxlength="4" inputmode="numeric"
                        class="w-full bg-slate-900/50 text-white text-center text-4xl tracking-[0.5em] p-4 rounded-2xl border border-white/10 mb-6 focus:border-sky-400 focus:ring-4 outline-none transition-all">
-                <button id="login-btn" class="w-full bg-white text-brand font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-transform mt-4">УВІЙТИ</button>
+                <!-- Додано onclick прямо в HTML для надійності -->
+                <button onclick="window.tryLogin()" id="login-btn" class="w-full bg-white text-brand font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-transform mt-4">УВІЙТИ</button>
             </div>
-            <div id="login-error" class="text-red-400 text-sm mt-4 font-bold hidden">Невірний PIN</div>
+            <div id="login-error" class="text-red-400 text-sm mt-4 font-bold hidden text-center bg-red-900/30 p-2 rounded">Невірний PIN</div>
         </div>
     </div>
 
     <!-- === 2. АДМІН ПАНЕЛЬ === -->
     <div id="dashboard-screen" class="screen">
         
-        <!-- Header з великим відступом -->
+        <!-- Header -->
         <header class="bg-white px-6 shadow-sm flex justify-between items-end z-20 border-b border-slate-100 shrink-0">
             <div class="pb-1">
                 <h1 class="font-bold text-2xl text-brand flex items-center gap-2">HappyFoot <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span></h1>
@@ -158,7 +164,7 @@
         </div>
     </div>
 
-    <!-- МОДАЛКИ (Ті самі, що й були, працюють стабільно) -->
+    <!-- МОДАЛКИ -->
     
     <!-- Деталі -->
     <div id="details-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm transition-all duration-300">
@@ -227,30 +233,62 @@
         };
 
         let app, db;
-        try { app = initializeApp(firebaseConfig); db = getFirestore(app); } catch(e) {}
+        const statusEl = document.getElementById('system-status');
 
+        try {
+            statusEl.classList.remove('hidden');
+            statusEl.innerText = "Підключення до Firebase...";
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            statusEl.innerText = "Система готова.";
+            statusEl.classList.add('text-green-300');
+            setTimeout(() => statusEl.classList.add('hidden'), 2000);
+            console.log("Firebase connected successfully");
+        } catch(e) {
+            statusEl.innerText = "Помилка: " + e.message;
+            statusEl.classList.add('text-red-400');
+            console.error("Firebase Error:", e);
+            alert("Помилка підключення до бази даних. Перевірте інтернет.");
+        }
+
+        /* --- LOGIC --- */
         let servicesData = {};
         let currentAppointments = [];
         let specialistsData = [];
 
-        window.checkPin = function() {
+        // Функція входу
+        window.tryLogin = function() {
+            console.log("Login attempted");
             const pin = document.getElementById('pin-input').value;
+            const errorEl = document.getElementById('login-error');
+            
             if(pin === '1111') {
+                errorEl.classList.add('hidden');
+                
+                // Перемикаємо екрани
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('dashboard-screen').style.display = 'flex';
+                
+                // Запускаємо додаток
                 initApp();
-            } else { 
-                document.getElementById('login-error').classList.remove('hidden');
-                document.getElementById('pin-input').value = ''; 
+            } else {
+                errorEl.classList.remove('hidden');
+                errorEl.innerText = "Невірний PIN-код";
+                document.getElementById('pin-input').value = '';
             }
         }
         
-        document.getElementById('login-btn').addEventListener('click', window.checkPin);
-        document.getElementById('pin-input').addEventListener('keyup', (e) => { if(e.key === 'Enter') window.checkPin() });
+        // Enter key support
+        document.getElementById('pin-input').addEventListener('keyup', (e) => {
+            if(e.key === 'Enter') window.tryLogin();
+        });
 
         function initApp() {
+            if (!db) return alert("База даних не підключена!");
+            
             const options = { weekday: 'long', day: 'numeric', month: 'long' };
             document.getElementById('current-date').innerText = new Date().toLocaleDateString('uk-UA', options);
+            
             setupAppointments();
             setupTeam();
             setupServices();
